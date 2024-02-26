@@ -217,12 +217,19 @@ public class Lexico {
    
    private Boolean EsPalabraReservada(String lex)
    {      
-       String palres[] = { "dim",
-                           "as",
-                           "integer",
-                           "single",
-                           "string",
-                           "end"
+       String palres[] = { "end",
+                           "update",
+                           "set",
+                           "where",
+                           "declare",
+                           "print",
+                           "delete",
+                           "from",
+                           "and",
+                           "or",
+                           "drop",
+                           "table",
+                           "if"
                          };
        for (int i = 0; i < palres.length; i++) {
            if (lex.equals ( palres[i] ) ) {       
