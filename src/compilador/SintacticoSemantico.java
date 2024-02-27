@@ -288,6 +288,198 @@ public class SintacticoSemantico {
          }
     }
     
+    // Autor: Arturo Fernandez Alvarez
+    private void Exprlog() {
+        if (preAnalisis.equals("and")) {
+            //EXPRLOG -> and EXPRREL
+            emparejar("and");
+            Exprrel();
+        } else {
+            // EXPRLOG -> empty
+        }
+    }
+
+    // Autor: Arturo Fernandez Alvarez
+    private void ElimTab() {
+        if (preAnalisis.equals("drop")) {
+            // ELIMTAB -> drop table id
+            emparejar("drop");
+            emparejar("table");
+            emparejar("id");
+        } else {
+            error("[ELIMTAB] El Tipo de Dato es Incorrecto."
+                    + "Se esperaba drop, table o id."
+                    + "No. Linea: " + cmp.be.preAnalisis.getNumLinea());
+        }
+    }
+
+    // Autor: Arturo Fernandez Alvarez
+    private void IfElse() {
+        if (preAnalisis.equals("if")) {
+            // IFELSE -> if EXPRCOND begin SENTENCIAS end IFELSE'
+            emparejar("if");
+            Exprcond();
+            emparejar("begin");
+            Sentencias();
+            emparejar("end");
+            IfElsePrima();
+        } else {
+            error("[IFELSE] El Tipo de Dato es Incorrecto."
+                    + "Se esperaba if, begin o end"
+                    + "No. Linea: " + cmp.be.preAnalisis.getNumLinea());
+        }
+    }
+
+    // Autor: Arturo Fernandez Alvarez
+    private void IfElsePrima() {
+        if (preAnalisis.equals("else")) {
+            // IFELSE' -> else begin SENTENCIAS end
+            emparejar("else");
+            emparejar("begin");
+            Sentencias();
+            emparejar("end");
+        } else {
+            // IFELSE' -> empty
+        }
+    }
+
+    // Autor: Arturo Fernandez Alvarez
+    private void Igualacion() {
+        if (preAnalisis.equals("id")) {
+            // IGUALACION -> id opasig EXPRARIT IGUALACIONprima
+            emparejar("id");
+            emparejar("opasig");
+            Exparit();
+            IgualacionPrima();
+        } else {
+            error("[IGUALACION] El Tipo de Dato es Incorrecto."
+                    + "Se esperaba id u opasig."
+                    + "No. Linea: " + cmp.be.preAnalisis.getNumLinea());
+        }
+    }
+
+    // Autor: Arturo Fernandez Alvarez
+    private void IgualacionPrima() {
+        if (preAnalisis.equals(",")) {
+            emparejar(",");
+            Igualacion();
+        } else {
+            // IGUALACIONprima -> empty
+        }
+    }
+
+    // Autor: Arturo Fernandez Alvarez
+    private void Insercion() {
+        if (preAnalisis.equals("insert")) {
+            emparejar("insert");
+            emparejar("into");
+            emparejar("id");
+            emparejar("(");
+            Columnas();
+            emparejar(")");
+            emparejar("values");
+            emparejar("(");
+            Expresiones();
+            emparejar(")");
+        }
+    }
+
+    // Autor: Arturo Fernandez Alvarez
+    private void ListaIds() {
+        if (preAnalisis.equals(",")) {
+            emparejar(",");
+            emparejar("id");
+            ListaIds();
+        } else {
+            // LISTAIDs -> empty
+        }
+    }
+
+    // Autor: Arturo Fernandez Alvarez
+    private void Nulo() {
+        if (preAnalisis.equals("null")) {
+            emparejar("null");
+        } else if (preAnalisis.equals("not null")) {
+            emparejar("not null");
+        } else {
+            // NULO -> empty
+        }
+    }
+
+    // Autor: Arturo Fernandez Alvarez
+    private void Operando() {
+        if (preAnalisis.equals("num")) {
+            emparejar("num");
+        } else if (preAnalisis.equals("num.num")) {
+            emparejar("num.num");
+        } else if (preAnalisis.equals("idvar")) {
+            emparejar("idvar");
+        } else if (preAnalisis.equals("literal")) {
+            emparejar("literal");
+        } else if (preAnalisis.equals("id")) {
+            emparejar("id");
+        } else {
+            error("[OPERANDO] El Tipo de Dato es Incorrecto."
+                    + "Se esperaba id u opasig."
+                    + "No. Linea: " + cmp.be.preAnalisis.getNumLinea());
+        }
+    }
+
+    // Autor: Arturo Fernandez Alvarez
+    private void Sentencias() {
+        if (preAnalisis.equals("if")) {
+            Sentencia();
+            Sentencias();
+        } else {
+            // SENTENCIAS -> empty
+        }
+    }
+
+    // Autor: Arturo Fernandez Alvarez
+    private void Sentencia() {
+        if (preAnalisis.equals("if")) {
+            IfElse();
+        } else if (preAnalisis.equals("while")) {
+            SenRep();
+        } else if (preAnalisis.equals("print")) {
+            Despliegue();
+        } else if (preAnalisis.equals("assign")) {
+            SentaSig();
+        } else if (preAnalisis.equals("select")) {
+            SentSelect();
+        } else if (preAnalisis.equals("delete")) {
+            DelReg();
+        } else if (preAnalisis.equals("id")) {
+            Insercion();
+        } else if (preAnalisis.equals("update")) {
+            Actregs();
+        } else if (preAnalisis.equals("create")) {
+            Tabla();
+        } else if (preAnalisis.equals("drop")) {
+            ElimTab();
+        } else if (preAnalisis.equals("case")) {
+            Selectiva();
+        } else {
+            error("[SENTENCIA] El Tipo de Dato es Incorrecto."
+                    + "Se esperaba id u opasig."
+                    + "No. Linea: " + cmp.be.preAnalisis.getNumLinea());
+        }
+    }
+
+    // Autor: Arturo Fernandez Alvarez
+    private void Selectiva() {
+        if (preAnalisis.equals("case")) {
+            emparejar("case");
+            SelWhen();
+            SelElse();
+            emparejar("end");
+        } else {
+            error("[SELECTIVA] El Tipo de Dato es Incorrecto."
+                    + "Se esperaba id u opasig."
+                    + "No. Linea: " + cmp.be.preAnalisis.getNumLinea());
+        }
+    }
+    
 }
 //------------------------------------------------------------------------------
 //::
