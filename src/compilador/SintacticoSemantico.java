@@ -116,7 +116,177 @@ public class SintacticoSemantico {
     //--------------------------------------------------------------------------
     //  *  *   *   *    PEGAR AQUI EL CODIGO DE LOS PROCEDURES  *  *  *  *
     //--------------------------------------------------------------------------
-
+    //-------------------------------------------------------------
+    //Autor: Daniel Vargas Hernandez
+    private void ProgramaSQL() {
+        if (preAnalisis.equals("end")) {
+        Declaracion();
+	Sentencias();
+	emparejar("end");
+    } else {
+            error("[ProgramaSQL]");
+        }
+    }
+    //-------------------------------------------------------------
+    //Autor: Daniel Vargas Hernandez
+    private void Actregs() {
+        if (preAnalisis.equals("id")) {
+            // ACTREGS -> update id  set  IGUALACION   where EXPRCOND
+            emparejar("update");
+            emparejar("id");
+            emparejar("set");
+            Igualacion();
+            emparejar("where");
+            ExprCond();
+        } else {
+            error("[Actregs]");
+        }
+    }
+    //-------------------------------------------------------------
+    //Autor: Daniel Vargas Hernandez
+    private void Columnas() {
+        if(preAnalisis.equals("id")) {
+            //Columnas -> id ColumnasPrima
+            emparejar("id");
+            ColumnasPrima();
+        } else {
+            error("[Columnas]");
+        }
+    }
+    //-------------------------------------------------------------
+    //Autor: Daniel Vargas Hernandez
+    private void ColumnasPrima() {
+        if(preAnalisis.equals(",")) {
+            //ColumnasPrima -> , Columnas
+            emparejar(",");
+            Columnas();
+        } else {
+            error("[ColumnasPrima]");
+        }
+    }
+    //-------------------------------------------------------------
+    //Autor: Daniel Vargas Hernandez
+    private void Declaracion() {
+        if(preAnalisis.equals("declare")) {
+            //Declaracion -> declare idvar Tipo Declaracion
+            emparejar("declare");
+            emparejar("idvar");
+            Tipo();
+            Declaracion();
+        } else {
+            //Declaracoin -> Empty
+        }
+    }
+    //-------------------------------------------------------------
+    //Autor: Daniel Vargas Hernandez
+    private void Despliegue() {
+        if(preAnalisis.equals("print")) {
+            //Despliegue -> print Exprarit
+            emparejar("print");
+            Exprarir();
+        } else {
+            error("[Despliegue]");
+        }
+    }
+    //-------------------------------------------------------------
+    //Autor: Daniel Vargas Hernandez
+    private void DelReg() {
+        if(preAnalisis.equals("delete")) {
+            //DelReg -> delete from id where ExprCond
+            emparejar("delete");
+            emparejar("from");
+            emparejar("id");
+            emparejar("where");
+            ExprCond();
+        } else {
+            error("[DelReg]");
+        }
+    }
+    //-------------------------------------------------------------
+    //Autor: Daniel Vargas Hernandez
+    private void Expresiones() {
+        if(preAnalisis.equals("num") || preAnalisis.equals("num.num")
+                || preAnalisis.equals("idvar") || preAnalisis.equals("literal")
+                || preAnalisis.equals("id")) {
+            //Expresiones -> Exparit ExpresionesPrima
+            Exparit();
+            ExpresionesPrima();
+        } else {
+            error("[Expresiones]");
+        }
+    }
+    //-------------------------------------------------------------
+    //Autor: Daniel Vargas Hernandez
+    private void ExpresionesPrima() {
+        if(preAnalisis.equals(",")) {
+            //ExpresionesPrima -> , Expresiones
+            emparejar(",");
+            Expresiones();
+        } else {
+            //ExpresionesPrima -> empty
+        }
+    }
+    //-------------------------------------------------------------
+    //Autor: Daniel Vargas Hernandez
+    private void Exparit() {
+        if(preAnalisis.equals("num") || preAnalisis.equals("num.num")
+                || preAnalisis.equals("idvar") || preAnalisis.equals("literal")
+                || preAnalisis.equals("id")) {
+            //Exparit -> Operando ExparitPrima
+            Operando();
+            ExparitPrima();
+        } else if(preAnalisis.equals("(")) {
+            //Exparit -> (Exparit) ExparitPrima
+            emparejar("(");
+            Exparit();
+            emparejar(")");
+            ExparitPrima();
+        } else {
+            error("[Exparit]");
+        }
+    }
+    //-------------------------------------------------------------
+    //Autor: Daniel Vargas Hernandez
+    private void ExparitPrima() {
+        if(preAnalisis.equals("opsuma")) {
+            //ExparitPrima -> opsuma Exparit
+            emparejar("opsuma");
+            Exparit();
+        } else if(preAnalisis.equals("opmult")) {
+            //ExparitPrima -> opmult Exparit
+            emparejar("opmult");
+            Exparit();
+        } else {
+            //ExparitPrima -> empty
+        }
+    }
+    //-------------------------------------------------------------
+    //Autor: Daniel Vargas Hernandez
+    private void ExprCond() {
+         if(preAnalisis.equals("num") || preAnalisis.equals("num.num")
+                || preAnalisis.equals("idvar") || preAnalisis.equals("literal")
+                || preAnalisis.equals("id")) {
+             //ExpCond -> Exprrel
+             Exprrel();
+             Exprlog();
+         } else {
+             error("[ExprCond]");
+         }
+    }
+    //-------------------------------------------------------------
+    //Autor: Daniel Vargas Hernandez
+    private void Exprrel() {
+         if(preAnalisis.equals("num") || preAnalisis.equals("num.num")
+                || preAnalisis.equals("idvar") || preAnalisis.equals("literal")
+                || preAnalisis.equals("id")) {
+             //Exprrel -> Exparit oprel Exparit
+             Exparit();
+             emparejar("oprel");
+             Exparit();
+         } else {
+             error("[Exprrel]");
+         }
+    }
     
 }
 //------------------------------------------------------------------------------
