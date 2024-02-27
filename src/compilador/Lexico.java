@@ -229,7 +229,23 @@ public class Lexico {
                            "or",
                            "drop",
                            "table",
-                           "if"
+                           "if",
+                           "begin",
+                           "insert",
+                           "into",
+                           "values",
+                           "null",
+                           "not",
+                           "then",
+                           "case",
+                           "when",
+                           "while",
+                           "assign",
+                           "int",
+                           "float",
+                           "char",
+                           "create",
+                           "table"
                          };
        for (int i = 0; i < palres.length; i++) {
            if (lex.equals ( palres[i] ) ) {       
