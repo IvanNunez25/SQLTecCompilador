@@ -60,7 +60,7 @@ public class SintacticoSemantico {
         preAnalisis = cmp.be.preAnalisis.complex;
 
         // * * *   INVOCAR AQUI EL PROCEDURE DEL SIMBOLO INICIAL   * * *
-        
+        ProgramaSQL();
     }
 
     //--------------------------------------------------------------------------
@@ -119,7 +119,10 @@ public class SintacticoSemantico {
     //-------------------------------------------------------------
     //Autor: Daniel Vargas Hernandez
     private void ProgramaSQL() {
-        if (preAnalisis.equals("end")) {
+        if (preAnalisis.equals("declare") || preAnalisis.equals("end") || preAnalisis.equals("if") || preAnalisis.equals("while")
+                || preAnalisis.equals("print") || preAnalisis.equals("assign") || preAnalisis.equals("select") || preAnalisis.equals("delete")
+                || preAnalisis.equals("insert") || preAnalisis.equals("update") || preAnalisis.equals("create") || preAnalisis.equals("drop")
+                || preAnalisis.equals("case")) {
         Declaracion();
 	Sentencias();
 	emparejar("end");
@@ -130,7 +133,7 @@ public class SintacticoSemantico {
     //-------------------------------------------------------------
     //Autor: Daniel Vargas Hernandez
     private void Actregs() {
-        if (preAnalisis.equals("id")) {
+        if (preAnalisis.equals("update")) {
             // ACTREGS -> update id  set  IGUALACION   where EXPRCOND
             emparejar("update");
             emparejar("id");
@@ -161,7 +164,7 @@ public class SintacticoSemantico {
             emparejar(",");
             Columnas();
         } else {
-            error("[ColumnasPrima]");
+            //ColumnasPrima -> empty
         }
     }
     //-------------------------------------------------------------
@@ -294,7 +297,10 @@ public class SintacticoSemantico {
             //EXPRLOG -> and EXPRREL
             emparejar("and");
             Exprrel();
-        } else {
+        } else if(preAnalisis.equals("or")) {
+            emparejar("or");
+            Exprrel();
+        }  else {
             // EXPRLOG -> empty
         }
     }
@@ -381,6 +387,8 @@ public class SintacticoSemantico {
             emparejar("(");
             Expresiones();
             emparejar(")");
+        } else {
+            error("[Insercion]");
         }
     }
 
@@ -395,12 +403,13 @@ public class SintacticoSemantico {
         }
     }
 
-    // Autor: Arturo Fernandez Alvarez
+    // Autor: Arturo Fernandez Alvarez**
     private void Nulo() {
         if (preAnalisis.equals("null")) {
             emparejar("null");
-        } else if (preAnalisis.equals("not null")) {
-            emparejar("not null");
+        } else if (preAnalisis.equals("not")) {
+            emparejar("not");
+            emparejar("null");
         } else {
             // NULO -> empty
         }
@@ -425,9 +434,12 @@ public class SintacticoSemantico {
         }
     }
 
-    // Autor: Arturo Fernandez Alvarez
+    // Autor: Arturo Fernandez Alvarez**
     private void Sentencias() {
-        if (preAnalisis.equals("if")) {
+        if (preAnalisis.equals("if")|| preAnalisis.equals("while")
+                || preAnalisis.equals("print") || preAnalisis.equals("assign") || preAnalisis.equals("select") || preAnalisis.equals("delete")
+                || preAnalisis.equals("insert") || preAnalisis.equals("update") || preAnalisis.equals("create") || preAnalisis.equals("drop")
+                || preAnalisis.equals("case")) {
             Sentencia();
             Sentencias();
         } else {
@@ -574,7 +586,7 @@ public class SintacticoSemantico {
             emparejar ( "idvar" );
             emparejar ( "opasig" );
             emparejar ( "id" );
-            SentSelect ();
+            SentSelectC ();
         } else {
             // SENTSELECTC -> empty
         }
