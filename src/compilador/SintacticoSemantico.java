@@ -183,7 +183,7 @@ public class SintacticoSemantico {
         if(preAnalisis.equals("print")) {
             //Despliegue -> print Exprarit
             emparejar("print");
-            Exprarir();
+            Exparit ();
         } else {
             error("[Despliegue]");
         }
@@ -318,7 +318,7 @@ public class SintacticoSemantico {
         if (preAnalisis.equals("if")) {
             // IFELSE -> if EXPRCOND begin SENTENCIAS end IFELSE'
             emparejar("if");
-            Exprcond();
+            ExprCond();
             emparejar("begin");
             Sentencias();
             emparejar("end");
@@ -444,7 +444,7 @@ public class SintacticoSemantico {
         } else if (preAnalisis.equals("print")) {
             Despliegue();
         } else if (preAnalisis.equals("assign")) {
-            SentaSig();
+            SentAsig();
         } else if (preAnalisis.equals("select")) {
             SentSelect();
         } else if (preAnalisis.equals("delete")) {
@@ -480,6 +480,168 @@ public class SintacticoSemantico {
         }
     }
     
+    // Autor: Ivanovicx Nuñez -----------------------------------------------------
+    private void SelWhen () {
+        if ( preAnalisis.equals( "when" ) ) {
+            // SELWHEN -> when EXPRCOND then SENTENCIA SELWHEN_PRIMA()
+            emparejar ( "when" );
+            ExprCond ();
+            emparejar ( "then" );
+            Sentencia ();
+            SelWhenPrima ();
+        } else {
+            error ( "[SelWhen] -> Se esperaba la palabra reservada 'when'");
+        }
+    }
+    
+    // Autor: Ivanovicx Nuñez -----------------------------------------------------
+
+    private void SelWhenPrima () {
+        if ( preAnalisis.equals( "when" ) ) {
+            // SELWEN_PRIMA -> SELWHEN
+            SelWhen ();
+        } else {
+            // SELWEN_PRIMA -> empty
+        }
+    }
+
+    // Autor: Ivanovicx Nuñez -----------------------------------------------------
+
+    private void SelElse () {
+        if ( preAnalisis.equals( "else" ) ) {
+            // SELELSE -> else SENTENCIA
+            emparejar ( "else" );
+            Sentencia ();            
+        } else {
+            // SELELSE -> else SENTENCIA
+        }
+    }
+
+    // Autor: Ivanovicx Nuñez -----------------------------------------------------
+
+    private void SenRep () {
+        if ( preAnalisis.equals( "while" ) ) {
+            // SENREP -> while EXPRCOND begin SENTENCIAS end
+            emparejar ( "while" );
+            ExprCond ();
+            emparejar( "begin" );
+            Sentencias ();
+            emparejar( "end" );
+        } else {
+            error ( "[SenRep] -> Se esperaba la palabra reservada 'while'");
+        }
+    }
+
+    // Autor: Ivanovicx Nuñez -----------------------------------------------------
+
+    private void SentAsig () {
+        if ( preAnalisis.equals( "assign" ) ) {
+            // SENTASIG -> assign idvar opasig EXPRARIT
+            emparejar ( "assign" );
+            emparejar ( "idvar" );
+            emparejar ( "opasig" );
+            Exparit();
+        } else {
+            error ( "[SentAsig] -> Se esperaba la palbra reservada 'assign'");
+        }
+    }
+    
+    // Autor: Ivanovicx Nuñez -----------------------------------------------------
+
+    private void SentSelect () {
+        if ( preAnalisis.equals( "select" ) ) {
+            // SENTSELECT -> select idvar opasig id SENTSELECTC from id where EXPRCOND
+            emparejar ( "select" );
+            emparejar ( "idvar" );
+            emparejar ( "opasig" );
+            emparejar ( "id" );
+            SentSelectC();
+            emparejar ( "from" );
+            emparejar ( "id" );
+            emparejar ( "where" );
+            ExprCond ();
+        } else {
+            error ( "[SentSelect] -> Se esperaba la palabra reservada 'select'");
+        }
+    }
+
+    // Autor: Ivanovicx Nuñez -----------------------------------------------------
+
+    private void SentSelectC () {
+        if ( preAnalisis.equals( "," ) ) {
+            // SENTSELECTC -> , idvar opasig id SENTSELECTC
+            emparejar ( "," );
+            emparejar ( "idvar" );
+            emparejar ( "opasig" );
+            emparejar ( "id" );
+            SentSelect ();
+        } else {
+            // SENTSELECTC -> empty
+        }
+    }
+
+    // Autor: Ivanovicx Nuñez -----------------------------------------------------
+
+    private void Tipo () {
+        if ( preAnalisis.equals( "int" ) ) {
+            // TIPO -> int
+            emparejar ( "int" );
+        } else if ( preAnalisis.equals( "float" ) ) {
+            // TIPO -> float
+            emparejar ( "float" );
+        } else if ( preAnalisis.equals( "char" ) ) {
+            // TIPO -> char (num)
+            emparejar ( "char" );
+            emparejar ( "(" );
+            emparejar ( "num" );
+            emparejar ( ")" );
+        } else {
+            error ( "[Tipo] -> Se esperaba un tipo de dato válido" );
+        }
+    }
+
+    // Autor: Ivanovicx Nuñez -----------------------------------------------------
+
+    private void Tabla () {
+        if ( preAnalisis.equals( "create" ) ) {
+            // TABLA -> create table id ( TABCOLUMAS )
+            emparejar ( "create" );
+            emparejar ( "table" );
+            emparejar ( "id" );
+            emparejar ( "(" );
+            TabColumnas ();
+            emparejar ( ")" );
+        } else {
+            error ( "[Tabla] -> Se esperaba la palabra reservada 'create'" );
+        }
+    }
+
+    // Autor: Ivanovicx Nuñez -----------------------------------------------------
+
+    private void TabColumnas () {
+        if ( preAnalisis.equals ( "id" ) ) {
+            // TABCOLUMNAS -> id TIPO NULO TABCOLUMNAS_PRIMA
+            emparejar ( "id" );
+            Tipo ();
+            Nulo ();
+            TabColumnasPrima ();
+        } else {
+            error ( "[TabColumnas] -> Se esperaba un nombre de columna");
+        }
+    }
+
+    // Autor: Ivanovicx Nuñez -----------------------------------------------------
+
+    private void TabColumnasPrima () {
+        if ( preAnalisis.equals( "," ) ) {
+            // TABCOLUMNAS_PRIMA -> , TABCOLUMNAS
+            emparejar ( "," );
+            TabColumnas ();
+        } else {
+            // TABCOLUMNAS_PRIMA -> empty
+        }
+    }
 }
+    
 //------------------------------------------------------------------------------
 //::
