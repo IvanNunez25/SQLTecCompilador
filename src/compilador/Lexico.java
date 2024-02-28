@@ -28,7 +28,7 @@
  *:                                 literal para que reconozcan correctamente las
  *:                                 cadenas :=, :, = y
  *:                                 literales entre comillas sencillas.
- *: 25/MAY/2023 F.Gil              -Se agregaron las pal res de BasicTec.
+ *: 10/SEP/2018 FGil               -Se agrego reconocedor de idvar.
  *:-----------------------------------------------------------------------------
  */
 
@@ -38,7 +38,7 @@ import general.Linea_BE;
 import general.Linea_TS;
 
 public class Lexico {
-    final int TOKREC = 17;
+   final int TOKREC = 18;
    final int MAXTOKENS = 500;
    private String[] _lexemas;
    private String[] _tokens;
@@ -149,6 +149,9 @@ public class Lexico {
            //--------------  Automata  Caracter--------------
           case 16 : _tokens[_noTokens] = "caracter";
                         break;
+           //--------------  Automata  idvar  --------------
+          case 17 : _tokens[_noTokens] = "idvar";
+                        break;              
          }
          if(noAuto != 0) {
              _lexemas  [_noTokens  ] = _lexema;
@@ -278,7 +281,8 @@ public class Lexico {
         for ( int i = 0; i < _noTokens; i++ )
         {
             //Comparando el identificador que no sea palabra reservada
-            if ( _tokens[ i ].equals  ( "id" ) )
+            if ( _tokens[ i ].equals  ( "id"    ) || 
+                 _tokens[ i ].equals  ( "idvar" )    )
             {
                 if(EsPalabraReservada(_lexemas[i])){
                     lineaBE = new Linea_BE (

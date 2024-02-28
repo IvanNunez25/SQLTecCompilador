@@ -29,6 +29,12 @@
  *:                                 literal para que reconozcan correctamente las
  *:                                 cadenas :=, :, = y
  *:                                 literales entre comillas sencillas.
+ *: 04/FEB/2017 FGil               -Se modifico automata de oprel para reconocer
+ *:                                el operador de comparacion de igualdad como
+ *:                                =  en lugar de  ==.
+ *:                                Se agrego automata de idvar.
+ *: 08/FEB/2017 FGil               -Se eliminó el reconocimiento de "and" y "or"
+ *:                                de los automatas de opmult y opsuma respectivamente.
  *:-----------------------------------------------------------------------------
  */
 
@@ -63,7 +69,7 @@ public class Automata {
        //--------------  Automata  Opsuma--------------
       case 2 : _edoAct = 10;
                     break;
-       //--------------  Automata  Identi--------------
+       //--------------  Automata  id --------------
       case 3 : _edoAct = 13;
                     break;
        //--------------  Automata  Literal--------------
@@ -102,6 +108,9 @@ public class Automata {
      //--------------  Automata  Caracter --------------
       case 16 : _edoAct = 55;  
                     break;
+     //--------------  Automata  idvar    --------------
+      case 17 : _edoAct = 63;  
+                    break;
      }
      while(oAnaLex.getI()<=_textoIma.length())
        switch (_edoAct) 
@@ -134,13 +143,7 @@ public class Automata {
       case 3 : c=SigCar(oAnaLex.getI());
                     oAnaLex.setI(oAnaLex.getI()+1);
                     if ((lenguaje="*").indexOf(c)>=0)  _edoAct=4;  else 
-                    if ((lenguaje="/").indexOf(c)>=0)  _edoAct=4;  else 
-                    if ((lenguaje="d").indexOf(c)>=0)  _edoAct=5;  else 
-                    if ((lenguaje="D").indexOf(c)>=0)  _edoAct=5;  else
-                    if ((lenguaje="a").indexOf(c)>=0)  _edoAct=6;  else 
-                    if ((lenguaje="A").indexOf(c)>=0)  _edoAct=6;  else
-                    if ((lenguaje="m").indexOf(c)>=0)  _edoAct=7;  else 
-                    if ((lenguaje="M").indexOf(c)>=0)  _edoAct=7;  else
+                    if ((lenguaje="/").indexOf(c)>=0)  _edoAct=4;  else     
                      { oAnaLex.setI(oAnaLex.getIniToken());
                           return false; }
                     break;
@@ -183,9 +186,7 @@ public class Automata {
        //--------------  Automata  Opsuma--------------
       case 10 : c=SigCar(oAnaLex.getI());
                     oAnaLex.setI(oAnaLex.getI()+1);
-                    if ((lenguaje="+").indexOf(c)>=0)  _edoAct=11;  else 
-                    if ((lenguaje="o").indexOf(c)>=0)  _edoAct=12;  else
-                    if ((lenguaje="O").indexOf(c)>=0)  _edoAct=12; else
+                    if ((lenguaje="+").indexOf(c)>=0)  _edoAct=11;  else                     
                      { oAnaLex.setI(oAnaLex.getIniToken());
                           return false; }
                     break;
@@ -197,7 +198,7 @@ public class Automata {
                      { oAnaLex.setI(oAnaLex.getIniToken());
                           return false; }
                     break;
-       //--------------  Automata  Identi--------------
+       //--------------  Automata  id --------------
       case 13 : c=SigCar(oAnaLex.getI());
                     oAnaLex.setI(oAnaLex.getI()+1);
                     if ((lenguaje="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz").indexOf(c)>=0)  _edoAct=14;  else 
@@ -216,10 +217,10 @@ public class Automata {
                     break;
       case 15 : oAnaLex.setI(oAnaLex.getI()-1);
                     return true;
-       //--------------  Automata  Literal--------------
+      //--------------  Automata  Literal--------------
       case 16 : c=SigCar(oAnaLex.getI());
                     oAnaLex.setI(oAnaLex.getI()+1);
-                    if ((lenguaje="\"").indexOf(c)>=0)  _edoAct=17;  else 
+                    if ((lenguaje="\'").indexOf(c)>=0)  _edoAct=17;  else 
                      { oAnaLex.setI(oAnaLex.getIniToken());
                           return false; }
                     break;
@@ -233,7 +234,7 @@ public class Automata {
                     break;
       case 18 : c=SigCar(oAnaLex.getI());
                     oAnaLex.setI(oAnaLex.getI()+1);
-                    if ((lenguaje="\"").indexOf(c)>=0)  _edoAct=19;  else 
+                    if ((lenguaje="\'").indexOf(c)>=0)  _edoAct=19;  else 
                     if ((lenguaje="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz").indexOf(c)>=0)  _edoAct=18;  else 
                     if ((lenguaje=" _!#$%&()*+,-./:;<=>?@[\\]^`{|}~€‚ƒ„…†‡ˆ‰Š‹ŒŽ‘’“”•–—˜™š›œžŸ ¡¢£¤¥¦§¨©ª«¬­®¯°±²³´µ¶·¸¹º»¼½¾¿").indexOf(c)>=0)  _edoAct=18;  else 
                     if ((lenguaje="0123456789").indexOf(c)>=0)  _edoAct=18;  else 
@@ -344,11 +345,9 @@ public class Automata {
        //--------------  Automata  Oprel--------------
       case 42 : c=SigCar(oAnaLex.getI());
                     oAnaLex.setI(oAnaLex.getI()+1);
-                    if((lenguaje="!").indexOf(c)>=0)  _edoAct=43;  else
-                    if((lenguaje="=").indexOf(c)>=0)  _edoAct=43;  else 
+                    if ((lenguaje="!").indexOf(c)>=0)  _edoAct=43;  else
                     if ((lenguaje=">").indexOf(c)>=0)  _edoAct=43;  else 
                     if ((lenguaje="<").indexOf(c)>=0)  _edoAct=44;  else 
-                    if ((lenguaje="!").indexOf(c)>=0)  _edoAct=44;  else 
                      { oAnaLex.setI(oAnaLex.getIniToken());
                           return false; }
                     break;
@@ -369,6 +368,7 @@ public class Automata {
        //--------------  Automata  Oprel2--------------
       case 46 : c=SigCar(oAnaLex.getI());
                     oAnaLex.setI(oAnaLex.getI()+1);
+                   if ((lenguaje="=").indexOf(c)>=0)  _edoAct=47;  else  
                    if ((lenguaje=">").indexOf(c)>=0)  _edoAct=47;  else 
                     if ((lenguaje="<").indexOf(c)>=0)  _edoAct=47;  else 
                      { oAnaLex.setI(oAnaLex.getIniToken());
@@ -411,11 +411,17 @@ public class Automata {
           //--------------  Automata  Opasig--------------
       case 53: c=SigCar(oAnaLex.getI());
                     oAnaLex.setI(oAnaLex.getI()+1);
-                    if ((lenguaje="=").indexOf(c)>=0)  _edoAct=54;  else
+                    if ((lenguaje=":").indexOf(c)>=0)  _edoAct=54;  else
                      { oAnaLex.setI(oAnaLex.getIniToken());
                           return false; }
                     break;
-      case 54 : return true;
+      case 54 : c=SigCar(oAnaLex.getI());
+                    oAnaLex.setI(oAnaLex.getI()+1);
+                    if ((lenguaje="=").indexOf(c)>=0)  _edoAct=59;  else 
+                     { oAnaLex.setI(oAnaLex.getIniToken());
+                          return false; }
+                    break;          
+      case 59 : return true;
        //--------------  Automata  Caracter --------------
       case 55 : c=SigCar(oAnaLex.getI());
                     oAnaLex.setI(oAnaLex.getI()+1);
@@ -439,6 +445,24 @@ public class Automata {
                           return false; }
                     break;          
       case 58 : return true;          
+       //--------------  Automata  idvar --------------
+      case 63 : c=SigCar(oAnaLex.getI());
+                    oAnaLex.setI(oAnaLex.getI()+1);
+                    if ((lenguaje="@").indexOf(c)>=0)  _edoAct=64;  else 
+                     { oAnaLex.setI(oAnaLex.getIniToken());
+                          return false; }
+                    break;
+      case 64 : c=SigCar(oAnaLex.getI());
+                    oAnaLex.setI(oAnaLex.getI()+1);
+                    if ((lenguaje="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz").indexOf(c)>=0)  _edoAct=64;  else 
+                    if ((lenguaje="_").indexOf(c)>=0)  _edoAct=64;  else 
+                    if ((lenguaje="0123456789").indexOf(c)>=0)  _edoAct=64;  else 
+                    if ((lenguaje=" !\"#$%&\'()*+,-./:;<=>?@[\\]^`{|}~€‚ƒ„…†‡ˆ‰Š‹ŒŽ‘’“”•–—˜™š›œžŸ ¡¢£¤¥¦§¨©ª«¬­®¯°±²³´µ¶·¸¹º»¼½¾¿\n\t\r\f").indexOf(c)>=0) _edoAct=65;  else 
+                     { oAnaLex.setI(oAnaLex.getIniToken());
+                          return false; }
+                    break;
+      case 65 : oAnaLex.setI(oAnaLex.getI()-1);
+                    return true;
 
        }
      switch (_edoAct) 
