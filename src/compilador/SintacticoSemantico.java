@@ -127,6 +127,7 @@ public class SintacticoSemantico {
 	Sentencias();
 	emparejar("end");
     } else {
+
             error("[ProgramaSQL]");
         }
     }
@@ -461,7 +462,7 @@ public class SintacticoSemantico {
             SentSelect();
         } else if (preAnalisis.equals("delete")) {
             DelReg();
-        } else if (preAnalisis.equals("id")) {
+        } else if (preAnalisis.equals("insert")) {
             Insercion();
         } else if (preAnalisis.equals("update")) {
             Actregs();
@@ -522,7 +523,7 @@ public class SintacticoSemantico {
     private void SelElse () {
         if ( preAnalisis.equals( "else" ) ) {
             // SELELSE -> else SENTENCIA
-            emparejar ( "else" );
+            emparejar ("else");
             Sentencia ();            
         } else {
             // SELELSE -> else SENTENCIA

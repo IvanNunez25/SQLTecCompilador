@@ -48,6 +48,148 @@ public class SintacticoErrTest {
         // #1 - Error se esperaba end
         programas.add ( """
         """ );
+              
+        // #02-declaracionVariables.sql : Se esperaba idvar en linea 2.
+        programas.add ( """
+              declare @nombre_completo  char (30)
+              declare promedio1         float
+              declare @base_men         int 
+              declare @nombre_completo2 char (10)
+              declare @promedio2        float
+              declare @base_men2        int   
+            end
+        """ );
+
+        // #03-sentenciasAsignacion.sql : Se esperaba opasig en linea 3
+        programas.add ( """
+              assign @nombre_completo := 'Fernando'
+              assign @promedio1 := 0
+              assign @promedio1  = 3.14159  
+              assign @promedio1 := ( @calif1 + @calif2 ) * 20 
+            end  
+        """ );        
+  
+        // #04a-sentenciaCondicional.sql : En linea 13 se esperaba begin
+        programas.add ( """
+              if @prom1 > 70   
+                begin
+                  assign @prom := 0
+                  print  @prom
+                end
+            
+              if @prom1 > 70 and @prom2 < 80
+                begin
+                  assign @prom := 0
+                  print  @prom
+                end
+              else
+                bigin
+                  assign @prom := 0
+                  print  @prom
+                end
+            
+              case
+                when @min + 10 > @max + 20 then print 'dentro'
+                when @min < 50 then print 'fuera'
+                else print 'enmedio'
+              end 
+            end  
+        """ ); 
+        
+        // #04b-sentenciaCondicional.sql : En linea 3 se esperaba when
+        programas.add ( """
+              case
+                when @min + 10 > @max + 20 then print 'dentro'
+                owen @min < 50 then print 'fuera'
+                else print 'enmedio'
+              end 
+            end  
+        """ );         
+
+        // #05-sentenciaRepetitiva.sql : En linea 5 se esperaba end
+        programas.add ( """
+            while @prom < 0  or @prom > 100
+                begin
+                  assign @prom := 0
+                  print  @prom      
+                begin 
+            end
+        """ );         
+
+        // #07-recuperacionDatos.sql : Se esperaba id en linea 6, despues del from
+        programas.add ( """
+            select @codigo := codigoprod 
+             from   productos
+             where  precio > 10  
+
+             select @codigo := codigoprod, @preciounit := precio
+             from   
+             where  precio > 10 and precio < 20 
+
+             select @codigo := codigoprod, @preciounit := precio, @descrip := descripcion
+             from   productos
+             where  precio > 10 or precio < 20 
+
+           end  
+        """ );  
+        
+        // #08-eliminacionRegistros.sql : Se esperaba where en linea 3
+        programas.add ( """
+              delete from productos where precio >= 0
+              delete from productos where precio >= @promedio + 10 
+              delete from productos       precio >= @promedio + 10  and  codigo = 'maruchan'
+            end  
+        """ );  
+        
+        // #09-insercionRegistros.sql : Se esperaba ) en linea 3, antes de values
+        programas.add ( """
+            insert into productos ( codigoprod ) values ( 10322 )
+
+             insert into productos ( codigoprod, descrip   values ( 10322, 'Sopa miserable' )
+
+
+             insert into productos ( codigoprod, descrip, precio1, precio2 )
+             values ( 10322, 'Sopa miserable', @prom * 10, precio1 + 20 )
+
+           end   
+        """ );  
+        
+        // #10-actualizacionRegistros.sql : Se esperaba id en linea 1, despues del update
+        programas.add ( """
+              update update
+              set    descrip := 'Sopa maruchan' 
+              where  precio1 < @preciobase * 1.16
+            
+              update productos
+              set    descrip := 'Sopa maruchan', precio1 := 25
+              where  precio1 < precio2 
+              
+              update productos
+              set    descrip := 'Sopa maruchan', precio1 := 25, ubicacion := 'A32'
+              where  precio1 < precio2  or  precio1 = 10
+              
+            end  
+        """ );  
+        
+        // #11-creacionTablas.sql : Se esperaba table en linea 1, despues de create
+        programas.add ( """
+            create tabla articulos
+             ( IDARTICULO              int                not null,
+               NOMBRE                  char ( 30 )        not null,
+               DESCRIPCION             char ( 50 )        not null,
+               IDCATEGORIA             int                not null,
+               PRECIOPORUNIDAD         float              null,
+               NIVELREABASTECIMIENTO   int                null,
+               QOH                     int                null
+             ) 
+           end   
+        """ );  
+        
+        // #12-eliminacionTablas.sql : Se esperaba id en linea 1, despues de table
+        programas.add ( """
+            drop table @articulos 
+           end   
+        """ );          
              
     }
     

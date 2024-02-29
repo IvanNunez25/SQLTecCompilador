@@ -248,7 +248,9 @@ public class Lexico {
                            "float",
                            "char",
                            "create",
-                           "table"
+                           "table",
+                           "select",
+                           "else"
                          };
        for (int i = 0; i < palres.length; i++) {
            if (lex.equals ( palres[i] ) ) {       
