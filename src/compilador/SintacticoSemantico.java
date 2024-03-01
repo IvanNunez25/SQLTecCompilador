@@ -246,7 +246,7 @@ public class SintacticoSemantico {
             emparejar(")");
             ExparitPrima();
         } else {
-            error("[Exparit] se esperaba num, num.num, idvar, literal o id");
+            error("[Exparit] se esperaba una expresion aritmetica");
         }
     }
     //-------------------------------------------------------------
@@ -274,7 +274,7 @@ public class SintacticoSemantico {
              Exprrel();
              Exprlog();
          } else {
-             error("[ExprCond] se esperaba num, num.num, idvar, literal o id");
+             error("[ExprCond] se esperaba una expresion aritmetica");
          }
     }
     //-------------------------------------------------------------
@@ -288,7 +288,7 @@ public class SintacticoSemantico {
              emparejar("oprel");
              Exparit();
          } else {
-             error("[Exprrel] se esperaba num, num.num, idvar, literal o id");
+             error("[Exprrel] se esperaba una expresion aritmetica");
          }
     }
     
@@ -389,7 +389,7 @@ public class SintacticoSemantico {
             Expresiones();
             emparejar(")");
         } else {
-            error("[Insercion]");
+            error("[Insercion] se esperaba un insert");
         }
     }
 
@@ -430,7 +430,7 @@ public class SintacticoSemantico {
             emparejar("id");
         } else {
             error("[OPERANDO] El Tipo de Dato es Incorrecto."
-                    + "Se esperaba id u opasig."
+                    + "Se esperaba se esperaba una expresion aritmetica."
                     + "No. Linea: " + cmp.be.preAnalisis.getNumLinea());
         }
     }
