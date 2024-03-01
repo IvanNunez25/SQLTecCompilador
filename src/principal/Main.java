@@ -49,7 +49,8 @@ public class Main {
     
     public static final String [] colaboradores = { 
         "Lenguajes y Automatas II :: Grupo A 7-8am :: Semestre Ene-Jun/2024",
-        "Latko Petrovic  (01130469)", 
-        "Jan Zmuda       (02131201)"
+        "Ivanovicx Nuñez Perez  (20130785)", 
+        "Daniel Vargas Hernandez (20130780)",
+        "Arturo Fernandez Alvarez (19130910)"
     };     
 }
