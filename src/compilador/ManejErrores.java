@@ -22,6 +22,9 @@
  *:=============================================================================
  *: 11/Sep/2023 F.Gil               -Mantener guardado en memoria el 1er mensaje
  *:                                 de error detectado, segun la etapa de compilacion.
+ *: 14/Sep/2023 F.Gil     2023.1    -Se hicieron adecuaciones para llevar registro
+ *:                                 de el primer mensaje de error que se genere
+ *:                                 en cada etapa de compilacion.
  *:-----------------------------------------------------------------------------
  */
 
@@ -39,6 +42,7 @@ public class ManejErrores {
     private int        totErrCodObj      = 0;
     private int        totWarningsSem    = 0;
     
+    // (v2023.1 ) : 14Sep2023 : FGil : Se agregaron las siguientes declaraciones
     private String     primerMensErrLexico     = "";
     private String     primerMensErrSintactico = "";
     private String     primerMensErrSemantico  = "";
@@ -58,6 +62,7 @@ public class ManejErrores {
         totErrLexico = totErrSintacticos = totErrSemanticos = totErrCodInt = 0;
         totWarningsSem = 0;
         
+        // (v2023.1) : 14Sep2023 : FGil : Se agregó la siguiente inicializacion.
         primerMensErrLexico = primerMensErrSintactico = primerMensErrSemantico = "";
         primerMensErrCodInt = primerMensErrCodObj = "";
     }
@@ -101,12 +106,23 @@ public class ManejErrores {
                                              break;
 		}
 
-        if ( tipoError == Compilador.WARNING_SEMANT )
-            // Manejo de Warnings
-            compilador.iuListener.mostrarWarning ( errorMensaje );
-        else
-            // Invocar el despliegue del error a la GUI
-            compilador.iuListener.mostrarErrores ( errorMensaje );
+        if ( tipoError == Compilador.WARNING_SEMANT ) {
+            // (2023.1) : 14Sep2023 : FGil : 
+            // Manejo de Warnings. Si no hay definida una IU imprimir a consola.
+            if ( compilador.iuListener == null )
+                System.out.println ( errorMensaje );
+            else
+                compilador.iuListener.mostrarWarning ( errorMensaje );
+        }
+        else {
+            // (2023.1) : 14Sep2023 : FGil :            
+            // Invocar el despliegue del error a la GUI.
+            // Si no hay definida una IU imprimir a consola.
+            if ( compilador.iuListener == null )
+                System.out.println ( errorMensaje );
+            else
+                compilador.iuListener.mostrarErrores ( errorMensaje );
+        }
     }
     
     //--------------------------------------------------------------------------
@@ -122,6 +138,10 @@ public class ManejErrores {
     //--------------------------------------------------------------------------
     public int getTotWarningsSem    () { return totWarningsSem;    }
     //--------------------------------------------------------------------------
+    
+    // (v2023.1) : 14Sep2023 : FGil : Se agregarón los siguientes metodos
+    //                                getPrimerMensXXX().
+    //--------------------------------------------------------------------------
     public String getPrimerMensErrLexico    () { return primerMensErrLexico;     }
     //--------------------------------------------------------------------------
     public String getPrimerMensErrSintatcio () { return primerMensErrSintactico; }
@@ -132,5 +152,5 @@ public class ManejErrores {
     //--------------------------------------------------------------------------
     public String getPrimerMensErrCodObj    () { return primerMensErrCodObj;     }
     //--------------------------------------------------------------------------
-    
+      
 }

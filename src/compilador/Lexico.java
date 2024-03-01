@@ -225,6 +225,7 @@ public class Lexico {
                            "begin",
                            "case",
                            "create",
+                           "char",
                            "declare",
                            "delete",
                            "drop", 

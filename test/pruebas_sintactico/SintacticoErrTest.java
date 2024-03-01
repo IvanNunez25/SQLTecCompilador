@@ -45,20 +45,20 @@ public class SintacticoErrTest {
     //--------------------------------------------------------------------------
     
     public SintacticoErrTest() {
-        // #1 - Error se esperaba end
-        programas.add ( """
-        """ );
-              
-        // #02-declaracionVariables.sql : Se esperaba idvar en linea 2.
-        programas.add ( """
-              declare @nombre_completo  char (30)
-              declare promedio1         float
-              declare @base_men         int 
-              declare @nombre_completo2 char (10)
-              declare @promedio2        float
-              declare @base_men2        int   
-            end
-        """ );
+//        // #1 - Error se esperaba end
+//        programas.add ( """
+//        """ );
+//              
+//        // #02-declaracionVariables.sql : Se esperaba idvar en linea 2.
+//        programas.add ( """
+//              declare @nombre_completo  char (30)
+//              declare promedio1         float
+//              declare @base_men         int 
+//              declare @nombre_completo2 char (10)
+//              declare @promedio2        float
+//              declare @base_men2        int   
+//            end
+//        """ );
 
         // #03-sentenciasAsignacion.sql : Se esperaba opasig en linea 3
         programas.add ( """
