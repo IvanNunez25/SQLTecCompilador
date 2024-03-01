@@ -128,7 +128,7 @@ public class SintacticoSemantico {
 	emparejar("end");
     } else {
 
-            error("[ProgramaSQL]");
+            error("[ProgramaSQL] se esperaba una declaracion, sentencia o end");
         }
     }
     //-------------------------------------------------------------
@@ -143,7 +143,7 @@ public class SintacticoSemantico {
             emparejar("where");
             ExprCond();
         } else {
-            error("[Actregs]");
+            error("[Actregs] se esperaba update");
         }
     }
     //-------------------------------------------------------------
@@ -154,7 +154,7 @@ public class SintacticoSemantico {
             emparejar("id");
             ColumnasPrima();
         } else {
-            error("[Columnas]");
+            error("[Columnas] se esperaba id");
         }
     }
     //-------------------------------------------------------------
@@ -189,7 +189,7 @@ public class SintacticoSemantico {
             emparejar("print");
             Exparit ();
         } else {
-            error("[Despliegue]");
+            error("[Despliegue] se esperaba print");
         }
     }
     //-------------------------------------------------------------
@@ -203,7 +203,7 @@ public class SintacticoSemantico {
             emparejar("where");
             ExprCond();
         } else {
-            error("[DelReg]");
+            error("[DelReg] se esperaba delete");
         }
     }
     //-------------------------------------------------------------
@@ -216,7 +216,7 @@ public class SintacticoSemantico {
             Exparit();
             ExpresionesPrima();
         } else {
-            error("[Expresiones]");
+            error("[Expresiones] se esperaba num, num.num, idvar, literal o id");
         }
     }
     //-------------------------------------------------------------
@@ -246,7 +246,7 @@ public class SintacticoSemantico {
             emparejar(")");
             ExparitPrima();
         } else {
-            error("[Exparit]");
+            error("[Exparit] se esperaba num, num.num, idvar, literal o id");
         }
     }
     //-------------------------------------------------------------
@@ -274,7 +274,7 @@ public class SintacticoSemantico {
              Exprrel();
              Exprlog();
          } else {
-             error("[ExprCond]");
+             error("[ExprCond] se esperaba num, num.num, idvar, literal o id");
          }
     }
     //-------------------------------------------------------------
@@ -288,7 +288,7 @@ public class SintacticoSemantico {
              emparejar("oprel");
              Exparit();
          } else {
-             error("[Exprrel]");
+             error("[Exprrel] se esperaba num, num.num, idvar, literal o id");
          }
     }
     
