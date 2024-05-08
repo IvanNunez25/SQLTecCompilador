@@ -32,10 +32,17 @@
  */
 package compilador;
 
+import general.Linea_TS;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
 import javax.swing.JOptionPane;
 
 public class SintacticoSemantico {
 
+    //Declarar las constances VACIO y ERROR_TIPO
+    private final String VACIO = "vacio";
+    private final String ERROR_TIPO = "error_tipo";
     private Compilador cmp;
     private boolean    analizarSemantica = false;
     private String     preAnalisis;
@@ -60,7 +67,7 @@ public class SintacticoSemantico {
         preAnalisis = cmp.be.preAnalisis.complex;
 
         // * * *   INVOCAR AQUI EL PROCEDURE DEL SIMBOLO INICIAL   * * *
-        ProgramaSQL();
+        ProgramaSQL(new Atributos());
     }
 
     //--------------------------------------------------------------------------
@@ -113,19 +120,126 @@ public class SintacticoSemantico {
     }
 
     // Fin de error
+     private boolean checarArchivo ( String nomarchivo ) {
+          FileReader     fr         = null;
+          BufferedReader br         = null;
+          String         linea      = null;
+          String         columna    = null;
+          String         tipo       = null;
+          String         ambito     = null;
+          boolean        existeArch = false;
+          int            pos;
+          
+          try {
+            // Intentar abrir el archivo con el dise�o de la tabla  
+            fr = new FileReader ( nomarchivo );
+            cmp.ts.anadeTipo(cmp.be.preAnalisis.getEntrada(), "tabla");
+            br = new BufferedReader ( fr );
+                
+            // Leer linea x linea, cada linea es la especificacion de una columna
+	        linea = br.readLine ();
+	        while ( linea != null  ) {
+  	        // Extraer nombre y tipo de dato de la columna
+               try
+               {
+                   columna = linea.substring (  0, 24 ).trim ();
+               }
+               catch (Exception err)
+               {
+                   columna = "ERROR";
+               }
+               try
+               {
+                   tipo    = linea.substring ( 29     ).trim ();
+               }
+               catch (Exception err)
+               {
+                   tipo = "ERROR";
+               }
+               try
+               {
+                   ambito  = nomarchivo.substring( 0, nomarchivo.length ()- 3 );
+               }
+               catch(Exception err)
+               {
+                   ambito = "ERROR";
+               }
+               // Agregar a la tabla de simbolos
+               Linea_TS lts = new Linea_TS ( "id", 
+                                             columna, 
+                                             "COLUMNA(" + tipo + ")", 
+                                             ambito
+                                            );
+               // Checar si en la Tabla de Simbolos existe la entrada para un 
+               // lexema y ambito iguales al de columna y ambito de la tabla .db
+               if ( ( pos = cmp.ts.buscar ( columna, ambito ) ) > 0 ) {
+                   // YA EXISTE: Si no tiene tipo asignarle el tipo columna(t) 
+                   if ( cmp.ts.buscaTipo ( pos ).trim ().isEmpty () )
+                       cmp.ts.anadeTipo  ( pos, tipo );
+               } else {
+                   // NO EXISTE: Buscar si en la T. de S. existe solo el lexema de la columna
+                   if ( ( pos = cmp.ts.buscar ( columna ) ) > 0 ) {
+                       // SI EXISTE: checar si el ambito esta en blanco
+                       Linea_TS aux = cmp.ts.obt_elemento ( pos );
+                       if ( aux.getAmbito ().trim ().isEmpty () ) {
+                         // Ambito en blanco rellenar el tipo y el ambito  
+                         cmp.ts.anadeTipo   ( pos, "COLUMNA("+ tipo+ ")"   );
+                         cmp.ts.anadeAmbito ( pos, ambito );
+                         
+                       } else {
+                         // Insertar un nuevo elemento a la tabla de simb.
+                         cmp.ts.insertar ( lts );
+                       }
+                   } else {
+                       // NO EXISTE: insertar un nuevo elemento a la tabla de simb.
+                       cmp.ts.insertar ( lts );
+                   }
+                }
+                   
+                // Leer siguiente linea
+	            linea   = br.readLine ();
+	        }
+            existeArch  = true;
+          } catch ( IOException ex ) {
+  	          System.out.println ( ex );
+	      } finally {
+              // Cierra los streams de texto si es que se crearon
+              try {
+                if ( br != null )
+                    br.close ();
+                if ( fr != null )
+                    fr.close();
+              } catch ( IOException ex ) {}
+          }           
+          return existeArch;
+        }
+	
+	  /*----------------------------------------------------------------------------------------*/
     //--------------------------------------------------------------------------
     //  *  *   *   *    PEGAR AQUI EL CODIGO DE LOS PROCEDURES  *  *  *  *
     //--------------------------------------------------------------------------
     //-------------------------------------------------------------
     //Autor: Daniel Vargas Hernandez
-    private void ProgramaSQL() {
+    private void ProgramaSQL(Atributos ProgramaSQL) {
+        Atributos Declaracion = new Atributos();
+        Atributos Sentencias = new Atributos();
         if (preAnalisis.equals("declare") || preAnalisis.equals("end") || preAnalisis.equals("if") || preAnalisis.equals("while")
                 || preAnalisis.equals("print") || preAnalisis.equals("assign") || preAnalisis.equals("select") || preAnalisis.equals("delete")
                 || preAnalisis.equals("insert") || preAnalisis.equals("update") || preAnalisis.equals("create") || preAnalisis.equals("drop")
                 || preAnalisis.equals("case")) {
-        Declaracion();
-	Sentencias();
+        Declaracion(Declaracion);
+	Sentencias(Sentencias);
 	emparejar("end");
+        //Accion Semantica 1
+        if(analizarSemantica) {
+            if(Declaracion.tipo.equals(VACIO) && Sentencias.tipo.equals(VACIO)) {
+                ProgramaSQL.tipo = VACIO;
+            } else {
+                ProgramaSQL.tipo = ERROR_TIPO;
+                cmp.me.error(Compilador.ERR_SEMANTICO, "[ProgramaSQL] Errores de tipos en el programa");
+
+            }
+        }
     } else {
 
             error("[ProgramaSQL] se esperaba una declaracion, sentencia o end");
@@ -170,15 +284,43 @@ public class SintacticoSemantico {
     }
     //-------------------------------------------------------------
     //Autor: Daniel Vargas Hernandez
-    private void Declaracion() {
+    private void Declaracion(Atributos Declaracion) {
+        Atributos Tipo = new Atributos();
+        Atributos Declaracion1 = new Atributos(); 
+        Linea_BE idvar = new Linea_BE();        
         if(preAnalisis.equals("declare")) {
             //Declaracion -> declare idvar Tipo Declaracion
             emparejar("declare");
             emparejar("idvar");
-            Tipo();
-            Declaracion();
+            Tipo(Tipo);
+            //Accion Semantica 2
+            if(analizarSemantica) {
+                if(cmp.ts.buscaTipo(idvar.entrada).equals(VACIO)) {
+                    cmp.ts.anadeTipo(idvar.entrada, Tipo.tipo);
+                    Declaracion1.tipo = VACIO;
+                } else {
+                    Declaracion1.tipo = ERROR_TIPO;
+                    cmp.me.error(Compilador.ERR_SEMANTICO, "[Declaracion1] Redeclaración del idvar");
+
+                }
+            }
+            Declaracion(Declaracion1);
+            //Accion Semantica 3
+            if(analizarSemantica) {
+                if(Declaracion1.h.equals(VACIO) && Declaracion1.tipo.equals(VACIO)) {
+                    Declaracion.tipo = VACIO;
+                } else {
+                    Declaracion.tipo = ERROR_TIPO;
+                    cmp.me.error(Compilador.ERR_SEMANTICO, "[Declaracion] Errores de tipos en la declaración de variables");
+                    
+                }
+            }
         } else {
             //Declaracoin -> Empty
+            //Accion Semantica 4
+            if(analizarSemantica) {
+                Declaracion.tipo = VACIO;
+            }
         }
     }
     //-------------------------------------------------------------
@@ -266,13 +408,24 @@ public class SintacticoSemantico {
     }
     //-------------------------------------------------------------
     //Autor: Daniel Vargas Hernandez
-    private void ExprCond() {
+    private void ExprCond(Atributos ExprCond) {
+        Atributos Exprrel = new Atributos();
+        Atributos ExprLog = new Atributos();
          if(preAnalisis.equals("num") || preAnalisis.equals("num.num")
                 || preAnalisis.equals("idvar") || preAnalisis.equals("literal")
                 || preAnalisis.equals("id")) {
              //ExpCond -> Exprrel
-             Exprrel();
-             Exprlog();
+             Exprrel(Exprrel);
+             Exprlog(ExprLog);
+             //Accion Semantica 25
+             if(analizarSemantica) {
+                 if(Exprrel.tipo.equals("boolean") && !ExprLog.tipo.equals(ERROR_TIPO)) {
+                     ExprCond.tipo = "boolean";
+                 } else {
+                     ExprCond.tipo = ERROR_TIPO;
+                    cmp.me.error(Compilador.ERR_SEMANTICO, "[ExprCond] Error de tipos en la expresión condicional");                     
+                 }
+             }
          } else {
              error("[ExprCond] se esperaba una expresion aritmetica");
          }
@@ -321,15 +474,29 @@ public class SintacticoSemantico {
     }
 
     // Autor: Arturo Fernandez Alvarez
-    private void IfElse() {
+    private void IfElse(Atributos IfElse) {
+        Atributos ExprCond = new Atributos();
+        Atributos Sentencias = new Atributos();
+        Atributos IfElsePrima = new Atributos();
+        
         if (preAnalisis.equals("if")) {
             // IFELSE -> if EXPRCOND begin SENTENCIAS end IFELSE'
             emparejar("if");
-            ExprCond();
+            ExprCond(ExprCond);
             emparejar("begin");
-            Sentencias();
+            Sentencias(Sentencias);
             emparejar("end");
-            IfElsePrima();
+            IfElsePrima(IfElsePrima);
+            //Accion Semantica 21
+            if(analizarSemantica) {
+                if(ExprCond.tipo.equals("boolean") && Sentencias.tipo.equals(VACIO)) {
+                    IfElse.tipo = VACIO;
+                } else {
+                    IfElse.tipo = ERROR_TIPO;
+                    cmp.me.error(Compilador.ERR_SEMANTICO, "[IfElse] Error de tipos en la comprobación del if-else");
+                    
+                }
+            }
         } else {
             error("[IFELSE] El Tipo de Dato es Incorrecto."
                     + "Se esperaba if, begin o end"
@@ -338,15 +505,24 @@ public class SintacticoSemantico {
     }
 
     // Autor: Arturo Fernandez Alvarez
-    private void IfElsePrima() {
+    private void IfElsePrima(Atributos IfElsePrima) {
+        Atributos Sentencias = new Atributos();
         if (preAnalisis.equals("else")) {
             // IFELSE' -> else begin SENTENCIAS end
             emparejar("else");
             emparejar("begin");
-            Sentencias();
+            Sentencias(Sentencias);
             emparejar("end");
+            //Accion Semantica 22
+            if(analizarSemantica) {
+                IfElsePrima.tipo = Sentencias.tipo;
+            }
         } else {
             // IFELSE' -> empty
+            //Accion Semantica 23
+            if(analizarSemantica) {
+                IfElsePrima.tipo = VACIO;
+            }
         }
     }
 
@@ -435,43 +611,114 @@ public class SintacticoSemantico {
         }
     }
 
-    // Autor: Arturo Fernandez Alvarez**
-    private void Sentencias() {
+    // Autor: Arturo Fernandez Alvarez
+    private void Sentencias(Atributos Sentencias) {
+        Atributos Sentencia = new Atributos();
+        Atributos Sentencias1 = new Atributos();        
         if (preAnalisis.equals("if")|| preAnalisis.equals("while")
                 || preAnalisis.equals("print") || preAnalisis.equals("assign") || preAnalisis.equals("select") || preAnalisis.equals("delete")
                 || preAnalisis.equals("insert") || preAnalisis.equals("update") || preAnalisis.equals("create") || preAnalisis.equals("drop")
                 || preAnalisis.equals("case")) {
-            Sentencia();
-            Sentencias();
+            Sentencia(Sentencia);
+            Sentencias(Sentencias1);
+            //Accion Semantica 8 pendiente
+            if(analizarSemantica) {
+                if(Sentencia.tipo.equals(VACIO) && Sentencias1.tipo.equals(VACIO)) {
+                    Sentencias1.tipo = VACIO;
+                } else {
+                    Sentencias1.tipo = ERROR_TIPO;
+                cmp.me.error(Compilador.ERR_SEMANTICO, "[Sentencias] Error de tipo Sentencia");
+                }
+            }
         } else {
             // SENTENCIAS -> empty
+            //Accion Semantica 9
+            if(analizarSemantica) {
+                Sentencias.tipo = VACIO;
+            }
         }
     }
 
     // Autor: Arturo Fernandez Alvarez
-    private void Sentencia() {
+    private void Sentencia(Atributos Sentencia) {
+        Atributos IfElse = new Atributos();
+        Atributos SenRep = new Atributos();
+        Atributos Despliegue = new Atributos();
+        Atributos SentAsig = new Atributos();
+        Atributos SentSelect = new Atributos();
+        Atributos DelReg = new Atributos();
+        Atributos Insercion = new Atributos();
+        Atributos Actregs = new Atributos();
+        Atributos Tabla = new Atributos();
+        Atributos ElimTab = new Atributos();
+        Atributos Selectiva = new Atributos();
+        
         if (preAnalisis.equals("if")) {
-            IfElse();
+            IfElse(IfElse);
+            //Accion Semantica 10
+            if(analizarSemantica) {
+                Sentencia.tipo = IfElse.tipo;
+            }
         } else if (preAnalisis.equals("while")) {
-            SenRep();
+            SenRep(SenRep);
+            //Accion Semantica 11
+            if(analizarSemantica) {
+                Sentencia.tipo = SenRep.tipo;
+            }            
         } else if (preAnalisis.equals("print")) {
-            Despliegue();
+            Despliegue(Despliegue);
+            //Accion Semantica 12
+            if(analizarSemantica) {
+                Sentencia.tipo = Despliegue.tipo;                
+            }            
         } else if (preAnalisis.equals("assign")) {
-            SentAsig();
+            SentAsig(SentAsig);
+            //Accion Semantica 13
+            if(analizarSemantica) {
+                Sentencia.tipo = SentAsig.tipo;                
+            }            
         } else if (preAnalisis.equals("select")) {
-            SentSelect();
+            SentSelect(SentSelect);
+            //Accion Semantica 14
+            if(analizarSemantica) {
+                Sentencia.tipo = SentSelect.tipo;                
+            }            
         } else if (preAnalisis.equals("delete")) {
-            DelReg();
+            DelReg(DelReg);
+            //Accion Semantica 15
+            if(analizarSemantica) {
+                Sentencia.tipo = DelReg.tipo;                
+            }            
         } else if (preAnalisis.equals("insert")) {
-            Insercion();
+            Insercion(Insercion);
+            //Accion Semantica 16
+            if(analizarSemantica) {
+                Sentencia.tipo = Insercion.tipo;                
+            }            
         } else if (preAnalisis.equals("update")) {
-            Actregs();
+            Actregs(Actregs);
+            //Accion Semantica 17
+            if(analizarSemantica) {
+                
+            }            
         } else if (preAnalisis.equals("create")) {
-            Tabla();
+            Tabla(Tabla);
+            //Accion Semantica 18
+            if(analizarSemantica) {
+                Sentencia.tipo = Tabla.tipo;
+            }            
         } else if (preAnalisis.equals("drop")) {
-            ElimTab();
+            ElimTab(ElimTab);
+            //Accion Semantica 19
+            if(analizarSemantica) {
+                Sentencia.tipo = ElimTab.tipo;                
+            }            
         } else if (preAnalisis.equals("case")) {
-            Selectiva();
+            Selectiva(Selectiva);
+            //Accion Semantica 20
+            if(analizarSemantica) {
+                Sentencia.tipo = Selectiva.tipo;                
+            }            
         } else {
             error("[SENTENCIA] El Tipo de Dato es Incorrecto."
                     + "Se esperaba id u opasig."
@@ -532,14 +779,25 @@ public class SintacticoSemantico {
 
     // Autor: Ivanovicx Nuñez -----------------------------------------------------
 
-    private void SenRep () {
+    private void SenRep (Atributos SenRep) {
+        Atributos ExprCond = new Atributos();
+        Atributos Sentencias = new Atributos();
         if ( preAnalisis.equals( "while" ) ) {
             // SENREP -> while EXPRCOND begin SENTENCIAS end
-            emparejar ( "while" );
-            ExprCond ();
+            emparejar( "while" );
+            ExprCond(ExprCond);
             emparejar( "begin" );
-            Sentencias ();
+            Sentencias(Sentencias);
             emparejar( "end" );
+            //Accion Semantica 24
+            if(analizarSemantica) {
+                if(ExprCond.tipo.equals("boolean") && Sentencias.tipo.equals(VACIO)) {
+                    SenRep.tipo = VACIO;
+                } else {
+                    SenRep.tipo = ERROR_TIPO;
+                    cmp.me.error(Compilador.ERR_SEMANTICO, "[SenRep] Error de tipos en la comprobación del while");
+                }
+            }
         } else {
             error ( "[SenRep] -> Se esperaba la palabra reservada 'while'");
         }
@@ -595,19 +853,33 @@ public class SintacticoSemantico {
 
     // Autor: Ivanovicx Nuñez -----------------------------------------------------
 
-    private void Tipo () {
+    private void Tipo (Atributos Tipo) {
+        Linea_BE num = new Linea_BE();
+
         if ( preAnalisis.equals( "int" ) ) {
             // TIPO -> int
             emparejar ( "int" );
+            //Accion Semantica 5
+            if(analizarSemantica) {
+                Tipo.tipo = "int";
+            }
         } else if ( preAnalisis.equals( "float" ) ) {
             // TIPO -> float
             emparejar ( "float" );
+            //Accion Semantica 6
+            if(analizarSemantica) {
+                Tipo.tipo = "float";
+            }
         } else if ( preAnalisis.equals( "char" ) ) {
             // TIPO -> char (num)
             emparejar ( "char" );
             emparejar ( "(" );
             emparejar ( "num" );
             emparejar ( ")" );
+            //Accion Semantica 7 pendiente
+            if(analizarSemantica) {
+                Tipo.tipo = "array( 1.." + num.lexema + ", char )";
+            }
         } else {
             error ( "[Tipo] -> Se esperaba un tipo de dato válido" );
         }
