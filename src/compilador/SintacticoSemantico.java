@@ -67,10 +67,17 @@ public class SintacticoSemantico {
         preAnalisis = cmp.be.preAnalisis.complex;
 
         // * * *   INVOCAR AQUI EL PROCEDURE DEL SIMBOLO INICIAL   * * *
-        ProgramaSQL(new Atributos());
+        // ProgramaSQL(new Atributos());
+        PROGRAMA();
     }
 
     //--------------------------------------------------------------------------
+    
+    private void PROGRAMA () {
+        if ( checarArchivo( "profes.db" ) ) {
+            System.out.println("Si existe profrs.db");
+        }
+    }
 
     private void emparejar(String t) {
         if (cmp.be.preAnalisis.complex.equals(t)) {
