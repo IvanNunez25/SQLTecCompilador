@@ -32,6 +32,7 @@
  */
 package compilador;
 
+import general.Linea_BE;
 import general.Linea_TS;
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -254,15 +255,48 @@ public class SintacticoSemantico {
     }
     //-------------------------------------------------------------
     //Autor: Daniel Vargas Hernandez
-    private void Actregs() {
+    private void Actregs(Atributos Actregs) {
+        Atributos Igualacion = new Atributos();
+        Atributos ExprCond = new Atributos();
+        Linea_BE id = new Linea_BE();
+        
         if (preAnalisis.equals("update")) {
             // ACTREGS -> update id  set  IGUALACION   where EXPRCOND
             emparejar("update");
+            id = cmp.be.preAnalisis;
             emparejar("id");
+            //Accion Semantica 41
+            if(analizarSemantica) {
+                if(checarArchivo(id.lexema)) {
+                    cmp.ts.anadeTipo(id.entrada, "tabla");
+                    Actregs.id = VACIO;
+                } else {
+                    Actregs.id = ERROR_TIPO;
+                    cmp.me.error(Compilador.ERR_SEMANTICO, "[ActRegs] El identificador id.lexema no es una tabla");                                                             
+                }
+            }
             emparejar("set");
-            Igualacion();
+            Igualacion(Igualacion);
+            //Accion Semantica 42
+            if(analizarSemantica) {
+                if(cmp.ts.buscaTipo(id.entrada).equals("tabla") && Igualacion.tipo.equals(VACIO)) {
+                    Actregs.h = VACIO;
+                } else {
+                    Actregs.h = ERROR_TIPO;
+                    cmp.me.error(Compilador.ERR_SEMANTICO, "[ActRegs] El identificador no es una tabla");
+                }
+            }
             emparejar("where");
-            ExprCond();
+            ExprCond(ExprCond);
+            //Accion Semantica 43 pendiente
+            if(analizarSemantica) {
+                if(Actregs.h.equals(VACIO) && ExprCond.tipo.equals("boolean")) {
+                    Actregs.tipo = VACIO;
+                } else {
+                    Actregs.tipo = ERROR_TIPO;
+                    cmp.me.error(Compilador.ERR_SEMANTICO, "[ActRegs] Error en la condicion de actualizacion");                                                             
+                }
+            }
         } else {
             error("[Actregs] se esperaba update");
         }
@@ -319,7 +353,6 @@ public class SintacticoSemantico {
                 } else {
                     Declaracion.tipo = ERROR_TIPO;
                     cmp.me.error(Compilador.ERR_SEMANTICO, "[Declaracion] Errores de tipos en la declaración de variables");
-                    
                 }
             }
         } else {
@@ -332,25 +365,62 @@ public class SintacticoSemantico {
     }
     //-------------------------------------------------------------
     //Autor: Daniel Vargas Hernandez
-    private void Despliegue() {
+    private void Despliegue(Atributos Despliegue) {
+        Atributos Exparit = new Atributos();
         if(preAnalisis.equals("print")) {
             //Despliegue -> print Exprarit
             emparejar("print");
-            Exparit ();
+            Exparit (Exparit);
+            //Accion Semantica 30
+            if(analizarSemantica) {
+                if(!Exparit.tipo.equals(ERROR_TIPO)) {
+                    Despliegue.tipo = VACIO;
+                } else {
+                    Despliegue.tipo = ERROR_TIPO;
+                    cmp.me.error(Compilador.ERR_SEMANTICO, "[Despliegue] Error de tipos en el despliegue");                                         
+                }
+            }
         } else {
             error("[Despliegue] se esperaba print");
         }
     }
     //-------------------------------------------------------------
     //Autor: Daniel Vargas Hernandez
-    private void DelReg() {
+    private void DelReg(Atributos DelReg) {
+        Atributos ExprCond = new Atributos();
+        Linea_BE id = new Linea_BE();
+        
         if(preAnalisis.equals("delete")) {
             //DelReg -> delete from id where ExprCond
             emparejar("delete");
             emparejar("from");
+            id = cmp.be.preAnalisis;            
             emparejar("id");
+            //Accion Semantica 39
+            if(analizarSemantica) {
+                if(checarArchivo(id.lexema)) {
+                    cmp.ts.anadeTipo(id.entrada, "tabla");
+                    DelReg.h = VACIO;
+                } else {
+                    DelReg.h = ERROR_TIPO;
+                    cmp.me.error(Compilador.ERR_SEMANTICO, "[DelReg] El id no es una tabla");                                                             
+                }
+            }
             emparejar("where");
-            ExprCond();
+            ExprCond(ExprCond);
+            //Accion Semantica 40 Pendiente
+            if(analizarSemantica) {
+                if(DelReg.h.equals(VACIO) && ExprCond.tipo.equals("boolean")) {
+                    DelReg.tipo = VACIO;
+                } else {
+                    if(DelReg.h.equals(ERROR_TIPO)) {
+                        DelReg.tipo = VACIO;
+                    } else {
+                        DelReg.tipo = ERROR_TIPO;
+                    cmp.me.error(Compilador.ERR_SEMANTICO, "[DelReg] La expresion condicional no es booleana");                                                                 
+                    }
+                }
+            }
         } else {
             error("[DelReg] se esperaba delete");
         }
@@ -381,19 +451,27 @@ public class SintacticoSemantico {
     }
     //-------------------------------------------------------------
     //Autor: Daniel Vargas Hernandez
-    private void Exparit() {
+    private void Exparit(Atributos Exparit) {
+        Atributos Operando = new Atributos();
+        Atributos ExparitPrima = new Atributos();
+        Atributos Exparit1 = new Atributos();
+        Atributos ExparitPrima1 = new Atributos();
         if(preAnalisis.equals("num") || preAnalisis.equals("num.num")
                 || preAnalisis.equals("idvar") || preAnalisis.equals("literal")
                 || preAnalisis.equals("id")) {
             //Exparit -> Operando ExparitPrima
-            Operando();
-            ExparitPrima();
+            Operando(Operando);
+            //Accion Semantica 58
+            ExparitPrima(ExparitPrima);
+            //Accion Semantica 59
         } else if(preAnalisis.equals("(")) {
             //Exparit -> (Exparit) ExparitPrima
             emparejar("(");
-            Exparit();
+            Exparit(Exparit1);
             emparejar(")");
-            ExparitPrima();
+            //Accion Semantica 60
+            ExparitPrima(ExparitPrima1);
+            //Accion Semantica 61
         } else {
             error("[Exparit] se esperaba una expresion aritmetica");
         }
@@ -439,40 +517,83 @@ public class SintacticoSemantico {
     }
     //-------------------------------------------------------------
     //Autor: Daniel Vargas Hernandez
-    private void Exprrel() {
+    private void Exprrel(Atributos Exprrel) {
+        Atributos Exparit = new Atributos();
+        Atributos Exparit1 = new Atributos();
          if(preAnalisis.equals("num") || preAnalisis.equals("num.num")
                 || preAnalisis.equals("idvar") || preAnalisis.equals("literal")
                 || preAnalisis.equals("id")) {
              //Exprrel -> Exparit oprel Exparit
-             Exparit();
+             Exparit(Exparit);
              emparejar("oprel");
-             Exparit();
+             Exparit(Exparit1);
+             //Accion Semantica 26
+             if(analizarSemantica) {
+                 if(Exparit.tipo.equals(Exparit1)) {
+                     Exprrel.tipo = "boolean";
+                 } else if(Exparit.tipo.equals("int") && Exparit1.tipo.equals("float")) {
+                     Exprrel.tipo = "boolean";
+                 } else if(Exparit.tipo.equals("float") && Exparit1.tipo.equals("int")) {
+                     Exprrel.tipo = "boolean";
+                 } else if(Exparit.tipo.equals("char") && Exparit1.tipo.equals("char")) {
+                     Exprrel.tipo = "boolean";
+                 } else {
+                     Exprrel.tipo = ERROR_TIPO;
+                    cmp.me.error(Compilador.ERR_SEMANTICO, "[Exprrel] Tipos incompatibles en la comparación");                                          
+                 }
+             }
          } else {
              error("[Exprrel] se esperaba una expresion aritmetica");
          }
     }
     
     // Autor: Arturo Fernandez Alvarez
-    private void Exprlog() {
+    private void Exprlog(Atributos Exprlog) {
+        Atributos Exprrel = new Atributos();
         if (preAnalisis.equals("and")) {
             //EXPRLOG -> and EXPRREL
             emparejar("and");
-            Exprrel();
+            Exprrel(Exprrel);
+            //Accion Semantica 27
+            if(analizarSemantica) {
+                Exprlog.tipo = Exprrel.tipo;
+            }
         } else if(preAnalisis.equals("or")) {
             emparejar("or");
-            Exprrel();
+            Exprrel(Exprrel);
+            //Accion Semantica 28
+            if(analizarSemantica) {
+                Exprlog.tipo = Exprrel.tipo;
+            }
         }  else {
             // EXPRLOG -> empty
+            //Accion Semantica 29
+            if(analizarSemantica) {
+                Exprlog.tipo = VACIO;
+            }
         }
     }
 
     // Autor: Arturo Fernandez Alvarez
-    private void ElimTab() {
+    private void ElimTab(Atributos ElimTab) {
+        Linea_BE id = new Linea_BE();
+        
         if (preAnalisis.equals("drop")) {
             // ELIMTAB -> drop table id
             emparejar("drop");
             emparejar("table");
+            id = cmp.be.preAnalisis;            
             emparejar("id");
+            //Accion Semantica 38
+            if(analizarSemantica) {
+                if(cmp.ts.buscaTipo(id.entrada).equals("tabla")) {
+                    ElimTab.tipo = VACIO;
+                } else {
+                    ElimTab.tipo = ERROR_TIPO;
+                    cmp.me.error(Compilador.ERR_SEMANTICO, "[ElimTab] Incompatibilidad de tipos de asignación");                                         
+
+                }
+            }
         } else {
             error("[ELIMTAB] El Tipo de Dato es Incorrecto."
                     + "Se esperaba drop, table o id."
@@ -534,13 +655,43 @@ public class SintacticoSemantico {
     }
 
     // Autor: Arturo Fernandez Alvarez
-    private void Igualacion() {
+    private void Igualacion(Atributos Igualacion) {
+        Atributos Exparit = new Atributos();
+        Atributos IgualacionPrima = new Atributos();
+        Linea_BE id = new Linea_BE();
+        
         if (preAnalisis.equals("id")) {
             // IGUALACION -> id opasig EXPRARIT IGUALACIONprima
+            id = cmp.be.preAnalisis;            
             emparejar("id");
             emparejar("opasig");
             Exparit();
+            //Accion Semantica 44
+            if(analizarSemantica) {
+                if(cmp.ts.buscaTipo(id.entrada).equals(Exparit.tipo)) {
+                    Igualacion.h = VACIO;
+                } else if(cmp.ts.buscaTipo(id.entrada).equals("char(n)") && Exparit.tipo.equals("char(m)")) {
+                    Igualacion.h = VACIO;
+                } else if(cmp.ts.buscaTipo(id.entrada).equals("float") && Exparit.tipo.equals("int")) {
+                    Igualacion.h = VACIO;
+                } else if (cmp.ts.buscaTipo(id.entrada) == null) {
+                    Igualacion.h = ERROR_TIPO;
+                    cmp.me.error(Compilador.ERR_SEMANTICO, "[Igualacion] Variable id.lexema no declarada");                                                             
+                } else {
+                    Igualacion.h = ERROR_TIPO;
+                    cmp.me.error(Compilador.ERR_SEMANTICO, "[Igualacion] Incompatibilidad de tipos de asignación");                                                             
+                }
+            }
             IgualacionPrima();
+            //Accion Semantica 45
+            if(analizarSemantica) {
+                if(Igualacion.h.equals(VACIO) && IgualacionPrima.tipo.equals(VACIO)) {
+                    Igualacion.tipo = VACIO;
+                } else {
+                    Igualacion.tipo = ERROR_TIPO;
+                    cmp.me.error(Compilador.ERR_SEMANTICO, "[Igualacion] Incompatibilidad en la igualacion de variables");                                                             
+                }
+            }
         } else {
             error("[IGUALACION] El Tipo de Dato es Incorrecto."
                     + "Se esperaba id u opasig."
@@ -549,28 +700,69 @@ public class SintacticoSemantico {
     }
 
     // Autor: Arturo Fernandez Alvarez
-    private void IgualacionPrima() {
+    private void IgualacionPrima(Atributos IgualacionPrima) {
+        Atributos Igualacion = new Atributos();
         if (preAnalisis.equals(",")) {
             emparejar(",");
-            Igualacion();
+            Igualacion(Igualacion);
+            //Accion Semantica 46
+            if(analizarSemantica) {
+                IgualacionPrima.tipo = Igualacion.tipo;
+            }
         } else {
             // IGUALACIONprima -> empty
+            //Accion Semantica 47
+            if(analizarSemantica) {
+                IgualacionPrima.tipo = VACIO;
+            }
         }
     }
 
     // Autor: Arturo Fernandez Alvarez
-    private void Insercion() {
+    private void Insercion(Atributos Insercion) {
+        Atributos Columnas = new Atributos();
+        Atributos Expresiones = new Atributos();
+        Linea_BE id = new Linea_BE();
+        
         if (preAnalisis.equals("insert")) {
             emparejar("insert");
             emparejar("into");
+            id = cmp.be.preAnalisis;            
             emparejar("id");
+            //Accion Semantica 55
+            if(analizarSemantica) {
+                if(checarArchivo(id.lexema)) {
+                    Insercion.h = VACIO;
+                } else {
+                    Insercion.h = ERROR_TIPO;
+                    cmp.me.error(Compilador.ERR_SEMANTICO, "[Insercion] El identificador no es una tabla");                                                             
+                }
+            }
             emparejar("(");
-            Columnas();
+            Columnas(Columnas);
             emparejar(")");
+            //Accion Semantica 56
+            if(analizarSemantica) {
+                if(Insercion.h.equals(VACIO) && Columnas.tipo.equals("boolean")) {
+                    Insercion.tipo = VACIO;
+                } else {
+                    Insercion.tipo = ERROR_TIPO;
+                    cmp.me.error(Compilador.ERR_SEMANTICO, "[Insercion] Error en la expresion condicional");                                                             
+                }
+            }
             emparejar("values");
             emparejar("(");
-            Expresiones();
+            Expresiones(Expresiones);
             emparejar(")");
+            //Accion Semantica 57
+            if(analizarSemantica) {
+                if(Insercion.h.equals(VACIO) && Expresiones.tipo.equals("boolean")) {
+                    Insercion.tipo = VACIO;
+                } else {
+                    Insercion.tipo = ERROR_TIPO;
+                    cmp.me.error(Compilador.ERR_SEMANTICO, "[Insercion] Error en la expresion condicional");                                                             
+                }
+            }
         } else {
             error("[Insercion] se esperaba un insert");
         }
@@ -734,12 +926,23 @@ public class SintacticoSemantico {
     }
 
     // Autor: Arturo Fernandez Alvarez
-    private void Selectiva() {
+    private void Selectiva(Atributos Selectiva) {
+        Atributos SelWhen = new Atributos();
+        Atributos SelElse = new Atributos();
         if (preAnalisis.equals("case")) {
             emparejar("case");
-            SelWhen();
-            SelElse();
+            SelWhen(SelWhen);
+            SelElse(SelElse);
             emparejar("end");
+            //Accion Semantica 54
+            if(analizarSemantica) {
+                if(SelWhen.tipo.equals(VACIO) && SelElse.tipo.equals(VACIO)) {
+                    Selectiva.tipo = VACIO;
+                } else {
+                    Selectiva.tipo = ERROR_TIPO;
+                    cmp.me.error(Compilador.ERR_SEMANTICO, "[Selectiva] Error de sintaxis en la clausula CASE");                                                             
+                }
+            }
         } else {
             error("[SELECTIVA] El Tipo de Dato es Incorrecto."
                     + "Se esperaba id u opasig."
@@ -748,14 +951,35 @@ public class SintacticoSemantico {
     }
     
     // Autor: Ivanovicx Nuñez -----------------------------------------------------
-    private void SelWhen () {
+    private void SelWhen (Atributos SelWhen) {
+        Atributos ExprCond = new Atributos();
+        Atributos Sentencia = new Atributos();
+        Atributos SelWhenPrima = new Atributos();
         if ( preAnalisis.equals( "when" ) ) {
             // SELWHEN -> when EXPRCOND then SENTENCIA SELWHEN_PRIMA()
             emparejar ( "when" );
-            ExprCond ();
+            ExprCond (ExprCond);
+            //Accion Semantica 50
+            if(analizarSemantica) {
+                if(ExprCond.tipo.equals("boolean")) {
+                    SelWhen.h = VACIO;
+                } else {
+                    SelWhen.h = ERROR_TIPO;
+                    cmp.me.error(Compilador.ERR_SEMANTICO, "[SelWhen] Expresion condicional invalida");                                                             
+                }
+            }
             emparejar ( "then" );
-            Sentencia ();
-            SelWhenPrima ();
+            Sentencia (Sentencia);
+            SelWhenPrima (SelWhenPrima);
+            //Accion Semantica 51
+            if(analizarSemantica) {
+                if(Sentencia.tipo.equals(VACIO) && SelWhenPrima.tipo.equals(VACIO) && SelWhen.tipo.equals(VACIO)) {
+                    SelWhen.tipo = VACIO;
+                } else {
+                    SelWhen.tipo = ERROR_TIPO;
+                    cmp.me.error(Compilador.ERR_SEMANTICO, "[SelWhen] La sentencia no es valida");                                                             
+                }
+            }
         } else {
             error ( "[SelWhen] -> Se esperaba la palabra reservada 'when'");
         }
@@ -763,24 +987,42 @@ public class SintacticoSemantico {
     
     // Autor: Ivanovicx Nuñez -----------------------------------------------------
 
-    private void SelWhenPrima () {
+    private void SelWhenPrima (Atributos SelWhenPrima) {
+        Atributos SelWhen = new Atributos();
         if ( preAnalisis.equals( "when" ) ) {
             // SELWEN_PRIMA -> SELWHEN
-            SelWhen ();
+            SelWhen (SelWhen);
+            //Accion Semantica 48
+            if(analizarSemantica) {
+                SelWhenPrima.tipo = SelWhen.tipo;
+            }
         } else {
             // SELWEN_PRIMA -> empty
+            //Accion Semantica 49
+            if(analizarSemantica) {
+                SelWhenPrima.tipo = VACIO;
+            }
         }
     }
 
     // Autor: Ivanovicx Nuñez -----------------------------------------------------
 
-    private void SelElse () {
+    private void SelElse (Atributos SelElse) {
+        Atributos Sentencia = new Atributos();
         if ( preAnalisis.equals( "else" ) ) {
             // SELELSE -> else SENTENCIA
             emparejar ("else");
-            Sentencia ();            
+            Sentencia (Sentencia);   
+            //Accion Semantica 52
+            if(analizarSemantica) {
+                SelElse.tipo = Sentencia.tipo;
+            }
         } else {
             // SELELSE -> else SENTENCIA
+            //Accion Semantica 53
+            if(analizarSemantica) {
+                SelElse.tipo = VACIO;
+            }
         }
     }
 
@@ -812,13 +1054,33 @@ public class SintacticoSemantico {
 
     // Autor: Ivanovicx Nuñez -----------------------------------------------------
 
-    private void SentAsig () {
+    private void SentAsig (Atributos SentAsig) {
+        Atributos Exparit = new Atributos();
+        Linea_BE idvar = new Linea_BE();
         if ( preAnalisis.equals( "assign" ) ) {
             // SENTASIG -> assign idvar opasig EXPRARIT
             emparejar ( "assign" );
+            idvar = cmp.be.preAnalisis;
+            
             emparejar ( "idvar" );
             emparejar ( "opasig" );
-            Exparit();
+            Exparit(Exparit);
+            //Accion Semantica 31 pendiente
+            if(analizarSemantica) {
+                if(cmp.ts.buscaTipo(idvar.entrada).equals(Exparit.tipo)) {
+                    SentAsig.tipo = VACIO;
+                } else if(cmp.ts.buscaTipo(idvar.entrada).equals("char(n)") && Exparit.tipo.equals("char(m)")) {
+                    SentAsig.tipo = VACIO;
+                } else if(cmp.ts.buscaTipo(idvar.entrada).equals("float") && Exparit.tipo.equals("int")) {
+                    SentAsig.tipo = VACIO;
+                } else if(cmp.ts.buscaTipo(idvar.entrada) == null) {
+                    SentAsig.tipo = ERROR_TIPO;
+                    cmp.me.error(Compilador.ERR_SEMANTICO, "[SentAsig] Variable no declarada: idvar.lexema");                                         
+                } else {
+                    SentAsig.tipo = ERROR_TIPO;
+                    cmp.me.error(Compilador.ERR_SEMANTICO, "[SentAsig] Incompatibilidad de tipos de asignación");                                         
+                }
+            }
         } else {
             error ( "[SentAsig] -> Se esperaba la palbra reservada 'assign'");
         }
@@ -881,6 +1143,7 @@ public class SintacticoSemantico {
             // TIPO -> char (num)
             emparejar ( "char" );
             emparejar ( "(" );
+            num = cmp.be.preAnalisis;            
             emparejar ( "num" );
             emparejar ( ")" );
             //Accion Semantica 7 pendiente
@@ -894,15 +1157,38 @@ public class SintacticoSemantico {
 
     // Autor: Ivanovicx Nuñez -----------------------------------------------------
 
-    private void Tabla () {
+    private void Tabla (Atributos Tabla) {
+        Atributos TabColumnas = new Atributos();
+        Linea_BE id = new Linea_BE();
+        
         if ( preAnalisis.equals( "create" ) ) {
             // TABLA -> create table id ( TABCOLUMAS )
             emparejar ( "create" );
             emparejar ( "table" );
+            id = cmp.be.preAnalisis;
             emparejar ( "id" );
+            //Accion Semantica 32
+            if(analizarSemantica) {
+                if(cmp.ts.buscaTipo(id.entrada) == null) {
+                    cmp.ts.anadeTipo(id.entrada, "tabla");
+                    Tabla.h = VACIO;
+                } else {
+                    Tabla.h = ERROR_TIPO;
+                    cmp.me.error(Compilador.ERR_SEMANTICO, "[Tabla] Identificador de tabla ya ha sido declarado");                                                             
+                }
+            }
             emparejar ( "(" );
-            TabColumnas ();
+            TabColumnas (TabColumnas);
             emparejar ( ")" );
+            //Accion Semantica 33
+            if(analizarSemantica) {
+                if(Tabla.h.equals(VACIO) && TabColumnas.h.equals(VACIO)) {
+                    Tabla.tipo = VACIO;
+                } else {
+                    Tabla.tipo = ERROR_TIPO;
+                    cmp.me.error(Compilador.ERR_SEMANTICO, "[Tabla] Error de tipos en sentencia CREATE TABLE");                                                             
+                }
+            }
         } else {
             error ( "[Tabla] -> Se esperaba la palabra reservada 'create'" );
         }
@@ -910,13 +1196,37 @@ public class SintacticoSemantico {
 
     // Autor: Ivanovicx Nuñez -----------------------------------------------------
 
-    private void TabColumnas () {
+    private void TabColumnas (Atributos TabColumnas) {        
+        Atributos Tipo = new Atributos();
+        Atributos Nulo = new Atributos();
+        Atributos TabColumnasPrima = new Atributos();
+        Linea_BE id = new Linea_BE();        
         if ( preAnalisis.equals ( "id" ) ) {
             // TABCOLUMNAS -> id TIPO NULO TABCOLUMNAS_PRIMA
+            id = cmp.be.preAnalisis;            
             emparejar ( "id" );
-            Tipo ();
-            Nulo ();
-            TabColumnasPrima ();
+            Tipo (Tipo);
+            //Accion Semantica 34
+            if(analizarSemantica) {
+                if(cmp.ts.buscaTipo(id.entrada) == null) {
+                    cmp.ts.anadeTipo(id.entrada, "columna(Tipo.tipo)");
+                    TabColumnas.h = VACIO;
+                } else {
+                    TabColumnas.h = ERROR_TIPO;
+                    cmp.me.error(Compilador.ERR_SEMANTICO, "[TabColumnas] Identificador de columnas ya declarado");                                                             
+                }
+            }
+            Nulo (Nulo);
+            TabColumnasPrima (TabColumnasPrima);
+            //Accion Semantica 35
+            if(analizarSemantica) {
+                if(TabColumnas.h.equals(VACIO) && TabColumnasPrima.tipo.equals(VACIO)) {
+                    TabColumnas.tipo = VACIO;
+                } else {
+                    TabColumnas.tipo = ERROR_TIPO;
+                    cmp.me.error(Compilador.ERR_SEMANTICO, "[TabColumnas] Error de TIPOS");                                                             
+                }
+            }
         } else {
             error ( "[TabColumnas] -> Se esperaba un nombre de columna");
         }
@@ -924,13 +1234,22 @@ public class SintacticoSemantico {
 
     // Autor: Ivanovicx Nuñez -----------------------------------------------------
 
-    private void TabColumnasPrima () {
+    private void TabColumnasPrima (Atributos TabColumnasPrima) {
+        Atributos TabColumnas = new Atributos();
         if ( preAnalisis.equals( "," ) ) {
             // TABCOLUMNAS_PRIMA -> , TABCOLUMNAS
             emparejar ( "," );
-            TabColumnas ();
+            TabColumnas (TabColumnas);
+            //Accion Semantica 36
+            if(analizarSemantica) {
+                TabColumnasPrima.tipo = TabColumnas.tipo;
+            }
         } else {
             // TABCOLUMNAS_PRIMA -> empty
+            //Accion Semantica 37
+            if(analizarSemantica) {
+                TabColumnasPrima.tipo = VACIO;
+            }
         }
     }
 }
