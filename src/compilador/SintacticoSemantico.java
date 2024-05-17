@@ -52,6 +52,7 @@ public class SintacticoSemantico {
     private final String patron = "char\\(\\d+\\)";
     private final String patronCol = "columna(char\\(\\d+\\))";
     private final String patronColumna = "columna(\\d+)";
+    private final String patronArray = "array\\( 1\\.\\.\\d+, char \\)";
     
     //--------------------------------------------------------------------------
     // Constructor de la clase, recibe la referencia de la clase principal del 
@@ -73,17 +74,17 @@ public class SintacticoSemantico {
         preAnalisis = cmp.be.preAnalisis.complex;
 
         // * * *   INVOCAR AQUI EL PROCEDURE DEL SIMBOLO INICIAL   * * *
-        // ProgramaSQL(new Atributos());
-        PROGRAMA();
+         ProgramaSQL(new Atributos());
+        //PROGRAMA();
     }
 
     //--------------------------------------------------------------------------
     
-    private void PROGRAMA () {
-        if ( checarArchivo( "profes.db" ) ) {
-            System.out.println("Si existe profrs.db");
-        }
-    }
+//    private void PROGRAMA () {
+//        if ( checarArchivo( "profes.db" ) ) {
+//            System.out.println("Si existe profrs.db");
+//        }
+//    }
 
     private void emparejar(String t) {
         if (cmp.be.preAnalisis.complex.equals(t)) {
@@ -367,15 +368,16 @@ public class SintacticoSemantico {
         if(preAnalisis.equals("declare")) {
             //Declaracion -> declare idvar Tipo Declaracion
             emparejar("declare");
+            idvar = cmp.be.preAnalisis; 
             emparejar("idvar");
             Tipo(Tipo);
             //Accion Semantica 2
             if(analizarSemantica) {
-                if(cmp.ts.buscaTipo(idvar.entrada).equals(VACIO)) {
+                if(cmp.ts.buscaTipo(idvar.entrada) == null || cmp.ts.buscaTipo(idvar.entrada).length() == 0) {
                     cmp.ts.anadeTipo(idvar.entrada, Tipo.tipo);
-                    Declaracion1.tipo = VACIO;
+                    Declaracion1.h = VACIO;
                 } else {
-                    Declaracion1.tipo = ERROR_TIPO;
+                    Declaracion1.h = ERROR_TIPO;
                     cmp.me.error(Compilador.ERR_SEMANTICO, "[Declaracion1] Redeclaración del idvar");
 
                 }
@@ -518,24 +520,35 @@ public class SintacticoSemantico {
     private void Exparit(Atributos Exparit) {
         Atributos Operando = new Atributos();
         Atributos ExparitPrima = new Atributos();
-        Atributos Exparit1 = new Atributos();
-        Atributos ExparitPrima1 = new Atributos();
         if(preAnalisis.equals("num") || preAnalisis.equals("num.num")
                 || preAnalisis.equals("idvar") || preAnalisis.equals("literal")
                 || preAnalisis.equals("id")) {
             //Exparit -> Operando ExparitPrima
             Operando(Operando);
             //Accion Semantica 58
+            if(analizarSemantica) {
+                ExparitPrima.h = Operando.tipo;
+                Exparit.lexema = Operando.lexema;
+            }
             ExparitPrima(ExparitPrima);
             //Accion Semantica 59
+            if(analizarSemantica) {
+                Exparit.tipo = ExparitPrima.tipo;
+            }
         } else if(preAnalisis.equals("(")) {
             //Exparit -> (Exparit) ExparitPrima
             emparejar("(");
-            Exparit(Exparit1);
+            Exparit(Exparit);
             emparejar(")");
             //Accion Semantica 60
-            ExparitPrima(ExparitPrima1);
+            if(analizarSemantica) {
+                ExparitPrima.h = Exparit.tipo;
+            }
+            ExparitPrima(ExparitPrima);
             //Accion Semantica 61
+            if(analizarSemantica) {
+                Exparit.tipo = ExparitPrima.tipo;
+            }
             ExparitPrima(ExparitPrima);
         } else {
             error("[Exparit] se esperaba una expresion aritmetica");
@@ -552,7 +565,7 @@ public class SintacticoSemantico {
             emparejar("opsuma");
             Exparit( Exparit );
             
-            // Acción semántica 67
+            // Acción semántica 67 es 62
             if ( analizarSemantica ) {
                 // Checar cuando es char(n)
                 if ( ExparitPrima.h.equals( Exparit.tipo ) &&
@@ -566,22 +579,30 @@ public class SintacticoSemantico {
                             ( ExparitPrima.h.equals( "columna(float)" ) && Exparit.tipo.equals( "int" ) )               ||
                             ( ExparitPrima.h.equals( "columna(float)" ) && Exparit.tipo.equals( "float" ) ) ) {
                     ExparitPrima.tipo = "float";
-                } else if ( ( ExparitPrima.h.equals( "int" )            && Exparit.tipo.matches( patron ) ) ||
-                            ( ExparitPrima.h.equals( "float" )          && Exparit.tipo.matches( patron ) ) ||
-                            ( ExparitPrima.h.matches( patron )          && Exparit.tipo.equals( "int" ) )   ||
-                            ( ExparitPrima.h.matches( patron )          && Exparit.tipo.equals( "float" ) ) ||
-                            ( ExparitPrima.h.equals( "columna(int)" )   && Exparit.tipo.matches( patron ) ) ||
-                            ( ExparitPrima.h.equals( "columna(float)" ) && Exparit.tipo.matches( patron ) ) ||
+                } else if ( ( ExparitPrima.h.equals( "int" )            && Exparit.tipo.matches( patronArray ) ) ||
+                            ( ExparitPrima.h.equals( "float" )          && Exparit.tipo.matches( patronArray ) ) ||
+                            ( ExparitPrima.h.matches( patronArray )          && Exparit.tipo.equals( "int" ) )   ||
+                            ( ExparitPrima.h.matches( patronArray )          && Exparit.tipo.equals( "float" ) ) ||
+                            ( ExparitPrima.h.equals( "columna(int)" )   && Exparit.tipo.matches( patronArray ) ) ||
+                            ( ExparitPrima.h.equals( "columna(float)" ) && Exparit.tipo.matches( patronArray ) ) ||
                             ( ExparitPrima.h.matches( patronCol )       && Exparit.tipo.equals( "int" ) )   ||
                             ( ExparitPrima.h.matches( patronCol )       && Exparit.tipo.equals( "float" ) ) ) {
-                    ExparitPrima.tipo = "char(" + "m" + ")";
+                    if(ExparitPrima.lexema != null) {
+                    ExparitPrima.lexemaInt = ExparitPrima.lexema.length() + Exparit.lexema.length();
+                    ExparitPrima.lexema += Exparit.lexema;                        
+                    }
+                    ExparitPrima.tipo = "array( 1.." + ExparitPrima.lexemaInt + ", char )";                    
                 } else if ( ( ExparitPrima.h.equals( "int" )            && Exparit.tipo.equals( "columna(int)" ) )  ||
                             ( ExparitPrima.h.equals( "columna(int)" )   && Exparit.tipo.equals( "int" ) ) ) {
                     ExparitPrima.tipo = "int";
-                } else if ( ( ExparitPrima.h.matches( patron ) && Exparit.tipo.matches( patron ) ) ||
-                            ( ExparitPrima.h.matches( patron ) && Exparit.tipo.matches( patronCol ) ) || 
-                            ( ExparitPrima.h.matches( patronCol) && Exparit.tipo.matches( patron ) ) ) {
-                    ExparitPrima.tipo = "char(" + "m+n" + ")";
+                } else if ( ( ExparitPrima.h.matches( patronArray ) && Exparit.tipo.matches( patronArray ) ) ||
+                            ( ExparitPrima.h.matches( patronArray ) && Exparit.tipo.matches( patronCol ) ) || 
+                            ( ExparitPrima.h.matches( patronCol) && Exparit.tipo.matches( patronArray ) ) ) {
+                    if(ExparitPrima.lexema != null) {
+                    ExparitPrima.lexemaInt = ExparitPrima.lexema.length() + Exparit.lexema.length();
+                    ExparitPrima.lexema += Exparit.lexema;
+                    }
+                    ExparitPrima.tipo = "array( 1.." + ExparitPrima.lexemaInt + ", char )";                    
                 } else {
                     ExparitPrima.tipo = ERROR_TIPO;
                     cmp.me.error( Compilador.ERR_SEMANTICO , "[Exparit'] Error de tipos en la expersión aritmetica" );
@@ -669,7 +690,7 @@ public class SintacticoSemantico {
                      Exprrel.tipo = "boolean";
                  } else if(Exparit.tipo.equals("float") && Exparit1.tipo.equals("int")) {
                      Exprrel.tipo = "boolean";
-                 } else if(Exparit.tipo.equals("char") && Exparit1.tipo.equals("char")) {
+                 } else if(Exparit.tipo.matches(patron) && Exparit1.tipo.matches(patron)) {
                      Exprrel.tipo = "boolean";
                  } else {
                      Exprrel.tipo = ERROR_TIPO;
@@ -804,7 +825,7 @@ public class SintacticoSemantico {
             if(analizarSemantica) {
                 if(cmp.ts.buscaTipo(id.entrada).equals(Exparit.tipo)) {
                     Igualacion.h = VACIO;
-                } else if(cmp.ts.buscaTipo(id.entrada).equals("char(n)") && Exparit.tipo.equals("char(m)")) {
+                } else if(cmp.ts.buscaTipo(id.entrada).matches(patron) && Exparit.tipo.matches(patron)) {
                     Igualacion.h = VACIO;
                 } else if(cmp.ts.buscaTipo(id.entrada).equals("float") && Exparit.tipo.equals("int")) {
                     Igualacion.h = VACIO;
@@ -950,21 +971,27 @@ public class SintacticoSemantico {
         Linea_BE idvar      = new Linea_BE();
         Linea_BE literal    = new Linea_BE();
         Linea_BE id         = new Linea_BE();
+        Linea_BE num         = new Linea_BE();
+        Linea_BE numnum         = new Linea_BE();
         
         if (preAnalisis.equals("num")) {
+            num = cmp.be.preAnalisis;
             emparejar("num");
             
             // Acción semántica 62
             if ( analizarSemantica ) {
                 Operando.tipo = "int";
+                Operando.lexema = num.lexema;
             }
             
         } else if (preAnalisis.equals("num.num")) {
+            numnum = cmp.be.preAnalisis;
             emparejar("num.num");
             
             // Acción semántica 63
             if ( analizarSemantica ) {
                 Operando.tipo = "float";
+                Operando.lexema = numnum.lexema;
             }
             
         } else if (preAnalisis.equals("idvar")) {
@@ -982,7 +1009,8 @@ public class SintacticoSemantico {
             
             // Acción semántica 65
             if ( analizarSemantica ) {
-                Operando.tipo = "char(" + literal.lexema.length() + ")";
+                Operando.tipo = "array( 1.." + literal.lexema.length() + ", char )";
+                Operando.lexema = literal.lexema;
             }
             
         } else if (preAnalisis.equals("id")) {
@@ -1004,19 +1032,18 @@ public class SintacticoSemantico {
     // Autor: Arturo Fernandez Alvarez
     private void Sentencias(Atributos Sentencias) {
         Atributos Sentencia = new Atributos();
-        Atributos Sentencias1 = new Atributos();        
         if (preAnalisis.equals("if")|| preAnalisis.equals("while")
                 || preAnalisis.equals("print") || preAnalisis.equals("assign") || preAnalisis.equals("select") || preAnalisis.equals("delete")
                 || preAnalisis.equals("insert") || preAnalisis.equals("update") || preAnalisis.equals("create") || preAnalisis.equals("drop")
                 || preAnalisis.equals("case")) {
             Sentencia(Sentencia);
-            Sentencias(Sentencias1);
+            Sentencias(Sentencias);
             //Accion Semantica 8 pendiente
             if(analizarSemantica) {
-                if(Sentencia.tipo.equals(VACIO) && Sentencias1.tipo.equals(VACIO)) {
-                    Sentencias1.tipo = VACIO;
+                if(Sentencia.tipo.equals(VACIO) && Sentencias.tipo.equals(VACIO)) {
+                    Sentencias.tipo = VACIO;
                 } else {
-                    Sentencias1.tipo = ERROR_TIPO;
+                    Sentencias.tipo = ERROR_TIPO;
                 cmp.me.error(Compilador.ERR_SEMANTICO, "[Sentencias] Error de tipo Sentencia");
                 }
             }
@@ -1089,7 +1116,7 @@ public class SintacticoSemantico {
             Actregs(Actregs);
             //Accion Semantica 17
             if(analizarSemantica) {
-                
+                Sentencia.tipo = Actregs.tipo;
             }            
         } else if (preAnalisis.equals("create")) {
             Tabla(Tabla);
@@ -1260,7 +1287,7 @@ public class SintacticoSemantico {
             if(analizarSemantica) {
                 if(cmp.ts.buscaTipo(idvar.entrada).equals(Exparit.tipo)) {
                     SentAsig.tipo = VACIO;
-                } else if(cmp.ts.buscaTipo(idvar.entrada).equals("char(n)") && Exparit.tipo.equals("char(m)")) {
+                } else if(cmp.ts.buscaTipo(idvar.entrada).matches(patronArray) && Exparit.tipo.matches(patronArray)) {
                     SentAsig.tipo = VACIO;
                 } else if(cmp.ts.buscaTipo(idvar.entrada).equals("float") && Exparit.tipo.equals("int")) {
                     SentAsig.tipo = VACIO;
