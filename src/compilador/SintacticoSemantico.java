@@ -40,6 +40,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import javax.swing.JOptionPane;
+import java.util.regex.Pattern;
+import java.util.regex.Matcher;
 
 public class SintacticoSemantico {
 
@@ -50,9 +52,17 @@ public class SintacticoSemantico {
     private boolean analizarSemantica = false;
     private String preAnalisis;
     private final String patron = "char\\(\\d+\\)";
-    private final String patronCol = "columna(char\\(\\d+\\))";
+    private final String patronCol = "COLUMNA(char\\(\\d+\\))";
     private final String patronColumna = "columna(\\d+)";
-    private final String patronArray = "array\\( 1\\.\\.\\d+, char \\)";
+    private final String patronArray = "array\\\\(\\\\s*1\\\\s*\\\\.\\\\.\\\\s*\\\\d+\\\\s*,\\\\s*char\\\\s*\\\\)";
+    private static final String PATRON_COLUMNA_FLOAT = "COLUMNA\\(float\\)";
+    private static final String PATRON_COLUMNA_INT = "COLUMNA\\(int\\)";
+    
+    private static final String PATRON_ARRAY_1 = "array\\(\\s*1\\s*\\.\\.\\s*\\d+\\s*,\\s*char\\s*\\)";
+    private static final String PATRON_COLUMNA_1 = "COLUMNA\\(char\\(\\d+\\)\\)";
+    
+    
+    ArrayList < Tupla > array_select = new ArrayList<> ();
     
     //--------------------------------------------------------------------------
     // Constructor de la clase, recibe la referencia de la clase principal del 
@@ -146,7 +156,7 @@ public class SintacticoSemantico {
           
           try {
             // Intentar abrir el archivo con el dise�o de la tabla  
-            fr = new FileReader ( nomarchivo );
+            fr = new FileReader ( nomarchivo + ".db" );
             cmp.ts.anadeTipo(cmp.be.preAnalisis.getEntrada(), "tabla");
             br = new BufferedReader ( fr );
                 
@@ -672,25 +682,40 @@ public class SintacticoSemantico {
     }
     //-------------------------------------------------------------
     //Autor: Daniel Vargas Hernandez
-    private void Exprrel(Atributos Exprrel) {
+    private void Exprrel( Atributos Exprrel ) {
+        
         Atributos Exparit = new Atributos();
         Atributos Exparit1 = new Atributos();
-         if(preAnalisis.equals("num") || preAnalisis.equals("num.num")
-                || preAnalisis.equals("idvar") || preAnalisis.equals("literal")
-                || preAnalisis.equals("id")) {
+        
+         if(preAnalisis.equals("num")       || 
+            preAnalisis.equals("num.num")   || 
+            preAnalisis.equals("idvar")     || 
+            preAnalisis.equals("literal")   || 
+            preAnalisis.equals("id")) {
+             
              //Exprrel -> Exparit oprel Exparit
-             Exparit(Exparit);
+             
+             Exparit( Exparit );
              emparejar("oprel");
-             Exparit(Exparit1);
-             //Accion Semantica 26
+             Exparit( Exparit1 );
+             
+             //Acción Semantica 26
+             
              if(analizarSemantica) {
-                 if(Exparit.tipo.equals(Exparit1)) {
+                 if(Exparit.tipo.equals( Exparit1.tipo ) ) {
                      Exprrel.tipo = "boolean";
                  } else if(Exparit.tipo.equals("int") && Exparit1.tipo.equals("float")) {
                      Exprrel.tipo = "boolean";
                  } else if(Exparit.tipo.equals("float") && Exparit1.tipo.equals("int")) {
                      Exprrel.tipo = "boolean";
-                 } else if(Exparit.tipo.matches(patron) && Exparit1.tipo.matches(patron)) {
+                 } else if(Exparit.tipo.matches(patronArray) && Exparit1.tipo.matches(patronArray)) {
+                     Exprrel.tipo = "boolean";
+                 } else if ( Exparit.tipo.matches( PATRON_COLUMNA_FLOAT ) && Exparit1.tipo.matches( PATRON_COLUMNA_INT )    ||
+                             Exparit.tipo.matches( PATRON_COLUMNA_FLOAT ) && Exparit1.tipo.equals( "float" )                ||
+                             Exparit.tipo.matches( PATRON_COLUMNA_FLOAT ) && Exparit1.tipo.equals( "int" )                 ||
+                             Exparit.tipo.matches( PATRON_COLUMNA_INT ) && Exparit1.tipo.matches( PATRON_COLUMNA_FLOAT )    ||
+                             Exparit.tipo.matches( PATRON_COLUMNA_INT ) && Exparit1.tipo.equals( "float" )                 ||
+                             Exparit.tipo.matches( PATRON_COLUMNA_INT ) && Exparit1.tipo.equals( "int" ) ) {
                      Exprrel.tipo = "boolean";
                  } else {
                      Exprrel.tipo = ERROR_TIPO;
@@ -1031,16 +1056,19 @@ public class SintacticoSemantico {
 
     // Autor: Arturo Fernandez Alvarez
     private void Sentencias(Atributos Sentencias) {
+        
         Atributos Sentencia = new Atributos();
+        Atributos Sentencias1 = new Atributos();
+        
         if (preAnalisis.equals("if")|| preAnalisis.equals("while")
                 || preAnalisis.equals("print") || preAnalisis.equals("assign") || preAnalisis.equals("select") || preAnalisis.equals("delete")
                 || preAnalisis.equals("insert") || preAnalisis.equals("update") || preAnalisis.equals("create") || preAnalisis.equals("drop")
                 || preAnalisis.equals("case")) {
-            Sentencia(Sentencia);
-            Sentencias(Sentencias);
+            Sentencia( Sentencia );
+            Sentencias( Sentencias1 );
             //Accion Semantica 8 pendiente
             if(analizarSemantica) {
-                if(Sentencia.tipo.equals(VACIO) && Sentencias.tipo.equals(VACIO)) {
+                if( Sentencia.tipo.equals(VACIO) && Sentencias1.tipo.equals(VACIO) ) {
                     Sentencias.tipo = VACIO;
                 } else {
                     Sentencias.tipo = ERROR_TIPO;
@@ -1057,18 +1085,18 @@ public class SintacticoSemantico {
     }
 
     // Autor: Arturo Fernandez Alvarez
-    private void Sentencia(Atributos Sentencia) {
-        Atributos IfElse = new Atributos();
-        Atributos SenRep = new Atributos();
-        Atributos Despliegue = new Atributos();
-        Atributos SentAsig = new Atributos();
-        Atributos SentSelect = new Atributos();
-        Atributos DelReg = new Atributos();
-        Atributos Insercion = new Atributos();
-        Atributos Actregs = new Atributos();
-        Atributos Tabla = new Atributos();
-        Atributos ElimTab = new Atributos();
-        Atributos Selectiva = new Atributos();
+    private void Sentencia( Atributos Sentencia ) {
+        Atributos IfElse        = new Atributos();
+        Atributos SenRep        = new Atributos();
+        Atributos Despliegue    = new Atributos();
+        Atributos SentAsig      = new Atributos();
+        Atributos SentSelect    = new Atributos();
+        Atributos DelReg        = new Atributos();
+        Atributos Insercion     = new Atributos();
+        Atributos Actregs       = new Atributos();
+        Atributos Tabla         = new Atributos();
+        Atributos ElimTab       = new Atributos();
+        Atributos Selectiva     = new Atributos();
         
         if (preAnalisis.equals("if")) {
             IfElse(IfElse);
@@ -1312,36 +1340,57 @@ public class SintacticoSemantico {
         Linea_BE id             = new Linea_BE ();
         Atributos ExprCond      = new Atributos ();
         Atributos SentSelectC   = new Atributos ();
-        ArrayList < Tupla > array_select = new ArrayList<> ();
         
         if ( preAnalisis.equals( "select" ) ) {
             
-            idvar = cmp.be.preAnalisis;
-            id = cmp.be.preAnalisis;
+            
+            
             
             // SENTSELECT -> select idvar opasig id SENTSELECTC from id where EXPRCOND
             emparejar ( "select" );
+            
+            idvar = cmp.be.preAnalisis;
             emparejar ( "idvar" );
             emparejar ( "opasig" );
+            
+            id = cmp.be.preAnalisis;
             emparejar ( "id" );
             
             // Acción semántica 70
             if ( analizarSemantica ) {
-                Tupla tupla = new Tupla( cmp.ts.buscaTipo( idvar.entrada ), id.entrada );
-                array_select.add( tupla );
-            }
+//                Tupla tupla = new Tupla( cmp.ts.buscaTipo( idvar.entrada ), id.entrada );
+                if ( !array_select.contains( new Tupla ( idvar, id ) ) ) {
+                    array_select.add( new Tupla ( idvar, id ) ); 
+                }
+                               
+//                if ( ( cmp.ts.buscaTipo( idvar.entrada ).equals( "int" ) && cmp.ts.buscaTipo( id.entrada ).matches( PATRON_COLUMNA_INT ) )      ||
+//                     ( cmp.ts.buscaTipo( idvar.entrada ).equals( "float" ) && cmp.ts.buscaTipo( id.entrada ).matches( PATRON_COLUMNA_INT ) )    ||
+//                     ( cmp.ts.buscaTipo( idvar.entrada ).equals( "int" ) && cmp.ts.buscaTipo( id.entrada ).matches( PATRON_COLUMNA_FLOAT ) )    ||
+//                     ( cmp.ts.buscaTipo( idvar.entrada ).equals( "float" ) && cmp.ts.buscaTipo( id.entrada ).matches( PATRON_COLUMNA_FLOAT ) )  ||
+//                     ( cmp.ts.buscaTipo( idvar.entrada ).matches( patronArray ) && cmp.ts.buscaTipo( id.entrada ).matches( patronCol ))) {
+//                    SentSelect.h = VACIO;
+//                    array_select.add( new Tupla ( idvar, id ) );
+//                } else {
+//                    SentSelect.h =  ERROR_TIPO;
+//                    cmp.me.error( Compilador.ERR_SEMANTICO, "El identificador " + idvar.lexema + " y " + id.lexema + " no comparten el mismo tipo de dato");
+//                }
+            }            
+            
             
             SentSelectC( SentSelectC );
             emparejar ( "from" );
+            
+            id = cmp.be.preAnalisis;
+            
             emparejar ( "id" );
             
             // Acción semántica 71
             if ( analizarSemantica ) {
                 if ( checarArchivo( id.lexema ) ) {
                     cmp.ts.anadeTipo( id.entrada , "tabla");
-                    SentSelect.tipo = VACIO;
+                    SentSelect.h = VACIO;
                 } else {
-                    SentSelect.tipo = ERROR_TIPO;
+                    SentSelect.h = ERROR_TIPO;
                     cmp.me.error( Compilador.ERR_SINTACTICO, "El identificador " + id.lexema + " no es una tabla" );
                 }
             }
@@ -1352,28 +1401,24 @@ public class SintacticoSemantico {
             // Acción semántica 72
             if ( analizarSemantica ) {
                 if ( SentSelect.h.equals( VACIO ) && ExprCond.tipo.equals( "boolean" ) ) {
+                    
                     for ( int i = 0; i < array_select.size(); i++ ) {
-                        for ( int j = 0; j < array_select.size(); j++ ) {
-                            if ( ( array_select.get(j).getTipo() .equals( cmp.ts.buscaTipo( id.entrada ) ) ) &&
-                                 ( cmp.ts.buscaTipo( id.entrada ).equals( patronColumna ) ) ) {
-                                if ( array_select.get(i).getTipo().equals( cmp.ts.buscaTipo( id.entrada ) ) ) {
-                                    SentSelect.tipo = VACIO;
-                                } else if ( array_select.get(i).getTipo().matches( patron ) &&
-                                            cmp.ts.buscaTipo( id.entrada ).matches( patron ) ) {
-                                    SentSelect.tipo = VACIO;
-                                } else if ( array_select.get(i).getTipo().equals( "float" ) &&
-                                            cmp.ts.buscaTipo( id.entrada ).equals( "int" ) ) {
-                                    SentSelect.tipo = VACIO;
-                                } else if ( array_select.get(i).getTipo() == null ) {
-                                    SentSelect.tipo = ERROR_TIPO;
-                                    cmp.me.error( Compilador.ERR_SEMANTICO, "[SentSelect] Variable " + id.lexema + " no declarada.");                                    
-                                } else {
-                                    SentSelect.tipo = ERROR_TIPO;
-                                    cmp.me.error( Compilador.ERR_SEMANTICO, "[SentSelect] Incompatibilidad de tipos en la asignación.");                                    
-                                }
-                            }
+//                        System.out.println( array_select.get( i ).getIdvar().lexema + ":" + cmp.ts.buscaTipo( array_select.get( i ).getIdvar().entrada ) + ":" +  ) );
+//                        System.out.println( array_select.get( i ).getId().lexema + ":" + cmp.ts.buscaTipo( array_select.get( i ).getId().entrada ) + ":" +  );
+                        
+                        if ( ( cmp.ts.buscaTipo( array_select.get( i ).getIdvar().entrada ).equals( "int" )         && cmp.ts.buscaTipo( array_select.get( i ).getId().entrada ).matches( PATRON_COLUMNA_INT ) )    ||
+                             ( cmp.ts.buscaTipo( array_select.get( i ).getIdvar().entrada ).equals( "float" )       && cmp.ts.buscaTipo( array_select.get( i ).getId().entrada ).matches( PATRON_COLUMNA_INT ) )    ||
+                             ( cmp.ts.buscaTipo( array_select.get( i ).getIdvar().entrada ).equals( "int" )         && cmp.ts.buscaTipo( array_select.get( i ).getId().entrada ).matches( PATRON_COLUMNA_FLOAT ) )  ||
+                             ( cmp.ts.buscaTipo( array_select.get( i ).getIdvar().entrada ).equals( "float" )       && cmp.ts.buscaTipo( array_select.get( i ).getId().entrada ).matches( PATRON_COLUMNA_FLOAT ) )  ||
+                             ( Pattern.matches( PATRON_ARRAY_1, cmp.ts.buscaTipo( array_select.get( i ).getIdvar().entrada ) )  && Pattern.matches( PATRON_COLUMNA_1, cmp.ts.buscaTipo( array_select.get( i ).getId().entrada ) ) ) ) {
+                               SentSelect.tipo = VACIO;
+                           } else {
+                            SentSelect.tipo = ERROR_TIPO;
+                            cmp.me.error( Compilador.ERR_SEMANTICO, "[SentSelect] Error en la comparación de tipos");
+                            break;
                         }
                     }
+//                    
                 }
             }
             
@@ -1389,22 +1434,27 @@ public class SintacticoSemantico {
         Linea_BE idvar          = new Linea_BE ();
         Linea_BE id             = new Linea_BE ();
         Atributos SentSelectC1  = new Atributos ();
-        ArrayList < Tupla > array_select = new ArrayList<> ();
         
         if ( preAnalisis.equals( "," ) ) {
             
-            idvar = cmp.be.preAnalisis;
-            id = cmp.be.preAnalisis;
+            
             
             // SENTSELECTC -> , idvar opasig id SENTSELECTC
             emparejar ( "," );
+            
+            idvar = cmp.be.preAnalisis;            
             emparejar ( "idvar" );
             emparejar ( "opasig" );
+            
+            id = cmp.be.preAnalisis;
             emparejar ( "id" );
             
             // Acción semántica 73
             if ( analizarSemantica ) {
-                array_select.add( new Tupla( cmp.ts.buscaTipo( idvar.entrada ), id.entrada ) );
+                if ( !array_select.contains( new Tupla ( idvar, id ) ) ) {
+                    array_select.add( new Tupla ( idvar, id ) ); 
+                } 
+//                array_select.add( new Tupla( cmp.ts.buscaTipo( idvar.entrada ), id.entrada ) );
             }
             
             SentSelectC ( SentSelectC1 );

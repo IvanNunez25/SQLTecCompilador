@@ -4,6 +4,7 @@
  */
 package compilador;
 
+import general.Linea_BE;
 import java.util.ArrayList;
 
 /**
@@ -12,28 +13,52 @@ import java.util.ArrayList;
  */
 public class Tupla {
     
-    private String tipo;
-    private int entrada;
+    private Linea_BE idvar;
+    private Linea_BE id;
+    
+    
 
-    public Tupla(String tipo, int entrada) {
-        this.tipo = tipo;
-        this.entrada = entrada;
+//    public Tupla(String idvar, int id) {
+//        this.idvar = idvar;
+//        this.id = id;
+//    }
+//
+//    public String getidvar() {
+//        return idvar;
+//    }
+//
+//    public void setidvar(String idvar) {
+//        this.idvar = idvar;
+//    }
+//
+//    public int getid() {
+//        return id;
+//    }
+//
+//    public void setid(int id) {
+//        this.id = id;
+
+    public Tupla(Linea_BE idvar, Linea_BE id) {
+        this.idvar = idvar;
+        this.id = id;
     }
 
-    public String getTipo() {
-        return tipo;
+    public Linea_BE getIdvar() {
+        return idvar;
     }
 
-    public void setTipo(String tipo) {
-        this.tipo = tipo;
+    public void setIdvar(Linea_BE idvar) {
+        this.idvar = idvar;
     }
 
-    public int getEntrada() {
-        return entrada;
+    public Linea_BE getId() {
+        return id;
     }
 
-    public void setEntrada(int entrada) {
-        this.entrada = entrada;
-    }          
+    public void setId(Linea_BE id) {
+        this.id = id;
+    }
+    
+    
     
 }
