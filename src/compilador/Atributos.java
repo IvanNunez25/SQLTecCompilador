@@ -14,4 +14,5 @@ public class Atributos {
     String id;
     String lexema = "";
     int lexemaInt = 0;
+    String codigo;
 }
