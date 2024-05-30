@@ -30,6 +30,7 @@ import general.Linea_TS;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.regex.Pattern;
 
 
@@ -43,7 +44,10 @@ public class GenCodigoInt {
     private static final String PATRON_COLUMNA_FLOAT = "COLUMNA\\(float\\)"; // COLUMNA(float)
     private static final String PATRON_COLUMNA_INT = "COLUMNA\\(int\\)";    // COLUMNA(int)
     private static final String PATRON_COLUMNA_1 = "COLUMNA\\(char\\(\\d+\\)\\)"; // columna(char(n))
-    private static final String PATRON_ARRAY_1 = "array\\(\\s*1\\s*\\.\\.\\s*\\d+\\s*,\\s*char\\s*\\)"; // array( 1..n, char )    
+    private static final String PATRON_ARRAY_1 = "array\\(\\s*1\\s*\\.\\.\\s*\\d+\\s*,\\s*char\\s*\\)"; // array( 1..n, char ) 
+    
+    private ArrayList <String> listaColumnas    = new ArrayList<>();
+    private ArrayList <String> listaExpresiones = new ArrayList<>();
 
     
     //--------------------------------------------------------------------------
@@ -262,8 +266,10 @@ public class GenCodigoInt {
             
             //Columnas -> id ColumnasPrima
             emparejar("id");
+            
             //Accion GCI 23 pendiente
-            listaColumnas
+            listaColumnas.add( id.lexema );
+                    
             ColumnasPrima( ColumnasPrima );
             
             
@@ -352,6 +358,7 @@ public class GenCodigoInt {
             emite( "ENDIF" );
             emite( "SKIP" );
             emite( "ENDDO" );
+            emite ( "BROW" );
             emite( "USE" );
         } else {
             error("[DelReg] se esperaba delete");
@@ -370,7 +377,8 @@ public class GenCodigoInt {
             //Expresiones -> Exparit ExpresionesPrima
             Exparit( Exparit );
             //Accion GCI 24 pendiente 
-            listaExpresiones
+            listaExpresiones.add( Exparit.codigo );
+            
             ExpresionesPrima( ExpresionesPrima );
             
             
@@ -615,6 +623,7 @@ public class GenCodigoInt {
             emite ( "ENDIF" );
             emite ( "SKIP" );
             emite ( "ENDDO" );
+            emite ( "BROW" );
             emite ( "USE" );
         }
     }
@@ -639,7 +648,17 @@ public class GenCodigoInt {
             emparejar("(");
             Expresiones(Expresiones);
             emparejar(")");
+            
             //Accin GCI 25 pendiente
+            emite ( "USE " + id.lexema );
+            emite ( "APPEND BANK" );
+            
+            for ( int i = 0; i < listaColumnas.size(); i++ ) {
+                emite ( "REPLACE " + listaColumnas.get ( i ) + " WITH " + listaExpresiones.get ( i ) );
+            }
+            
+            emite ( "BROW" );
+            emite ( "USE" );
             
         } else {
             error("[Insercion] se esperaba un insert");
@@ -990,6 +1009,7 @@ public class GenCodigoInt {
             emite( "ENDIF" );
             emite( "SKIP" );
             emite( "ENDDO" );
+            emite ( "BROW" );
             emite( "USE" );
         }
     }
