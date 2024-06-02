@@ -532,6 +532,7 @@ public class SintacticoSemantico {
     //Autor: Daniel Vargas Hernandez
     private void Exparit(Atributos Exparit) {
         Atributos Operando = new Atributos();
+        Atributos Exparit1 = new Atributos();        
         Atributos ExparitPrima = new Atributos();
         if(preAnalisis.equals("num") || preAnalisis.equals("num.num")
                 || preAnalisis.equals("idvar") || preAnalisis.equals("literal")
@@ -551,7 +552,7 @@ public class SintacticoSemantico {
         } else if(preAnalisis.equals("(")) {
             //Exparit -> (Exparit) ExparitPrima
             emparejar("(");
-            Exparit(Exparit);
+            Exparit(Exparit1);
             emparejar(")");
             //Accion Semantica 60
             if(analizarSemantica) {

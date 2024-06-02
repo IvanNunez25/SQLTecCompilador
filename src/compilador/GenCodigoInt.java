@@ -38,6 +38,7 @@ public class GenCodigoInt {
  
     private Compilador cmp;
     private String preAnalisis;
+
     private boolean analizarSemantica = false;
     
     
@@ -61,6 +62,7 @@ public class GenCodigoInt {
     //--------------------------------------------------------------------------
 	
     public void generar () {
+        preAnalisis = cmp.be.preAnalisis.complex;
         ProgramaSQL( new Atributos() );
     }    
     
@@ -242,7 +244,7 @@ public class GenCodigoInt {
             emite ( "USE " + id.lexema);
             emite ( "GO TOP" );
             emite ( "DO WHILE .NOT. EOF()" );
-            emite ( "IF" + ExprCond.codigo);
+            emite ( "IF " + ExprCond.codigo);
             Igualacion(Igualacion);
             
             
@@ -353,7 +355,7 @@ public class GenCodigoInt {
             emite( "USE" + id.lexema);
             emite ( "GO TOP");
             emite ( "DO WHILE .NOT. EOF()" );
-            emite ( "IF" + ExprCond.codigo);
+            emite ( "IF " + ExprCond.codigo + "");
             emite( "DELETE" );
             emite( "ENDIF" );
             emite( "SKIP" );
@@ -408,6 +410,7 @@ public class GenCodigoInt {
     private void Exparit(Atributos Exparit) {
         Atributos Operando = new Atributos();
         Atributos ExparitPrima = new Atributos();
+        Atributos Exparit1 = new Atributos();
         if(preAnalisis.equals("num") || preAnalisis.equals("num.num")
                 || preAnalisis.equals("idvar") || preAnalisis.equals("literal")
                 || preAnalisis.equals("id")) {
@@ -416,15 +419,22 @@ public class GenCodigoInt {
             
             ExparitPrima(ExparitPrima);
             
+            //Accion C3D 36
+            Exparit.codigo = Operando.codigo + ExparitPrima.codigo;
+            
         } else if(preAnalisis.equals("(")) {
             //Exparit -> (Exparit) ExparitPrima
             emparejar("(");
             Exparit(Exparit);
             emparejar(")");
             
-            ExparitPrima(ExparitPrima);
+            Exparit(Exparit1);
             
             ExparitPrima(ExparitPrima);
+            
+            //Accion C3D 37
+            Exparit.codigo = Exparit1.codigo + ExparitPrima.codigo;
+            
         } else {
             error("[Exparit] se esperaba una expresion aritmetica");
         }
@@ -451,6 +461,8 @@ public class GenCodigoInt {
         } else {
             //ExparitPrima -> empty
             
+            //Accion C3D 43
+            ExparitPrima.codigo = "";
             
         }
     }
@@ -465,6 +477,7 @@ public class GenCodigoInt {
              //ExpCond -> Exprrel
              Exprrel(Exprrel);
              Exprlog(ExprLog);
+             
              //Accion C3D 15
              ExprCond.codigo = Exprrel.codigo + ExprLog.codigo;
              
@@ -478,6 +491,7 @@ public class GenCodigoInt {
         
         Atributos Exparit = new Atributos();
         Atributos Exparit1 = new Atributos();
+        Linea_BE oprel = new Linea_BE();
         
          if(preAnalisis.equals("num")       || 
             preAnalisis.equals("num.num")   || 
@@ -485,15 +499,18 @@ public class GenCodigoInt {
             preAnalisis.equals("literal")   || 
             preAnalisis.equals("id")) {
              
-             //Exprrel -> Exparit oprel Exparit
+            //Exprrel -> Exparit oprel Exparit
              
-             Exparit( Exparit );
-             emparejar("oprel");
-             Exparit( Exparit1 );
-             // Accion C3D 11
-             Exprrel.codigo = Exparit.codigo + Exparit1.codigo;
+            Exparit( Exparit );
+            oprel = cmp.be.preAnalisis;
+            emparejar("oprel");
+            Exparit( Exparit1 );
+             
+            // Accion C3D 11
+            Exprrel.codigo = Exparit.codigo + " " + oprel.lexema + " " + Exparit1.codigo;
+             
          } else {
-             error("[Exprrel] se esperaba una expresion aritmetica");
+            error("[Exprrel] se esperaba una expresion aritmetica");
          }
     }
     
@@ -551,8 +568,10 @@ public class GenCodigoInt {
             emparejar("if");
             ExprCond(ExprCond);
             emparejar("begin");
+            
             // Accion SC3D 7
-            emite( "IF " + ExprCond.codigo );
+            emite( "IF " + ExprCond.codigo + " ");
+            
             Sentencias(Sentencias);
             emparejar("end");
             IfElsePrima(IfElsePrima);
@@ -709,28 +728,37 @@ public class GenCodigoInt {
             num = cmp.be.preAnalisis;
             emparejar("num");
             
+            //Accion C3D 38
+            Operando.codigo = num.lexema;
             
         } else if (preAnalisis.equals("num.num")) {
             numnum = cmp.be.preAnalisis;
             emparejar("num.num");
             
+            //Accion C3D 39
+            Operando.codigo = numnum.lexema;
             
             
         } else if (preAnalisis.equals("idvar")) {
             idvar = cmp.be.preAnalisis;
             emparejar("idvar");
             
+            //Accion C3D 40
+            Operando.codigo = idvar.lexema.substring(1, idvar.lexema.length() - 1);
             
         } else if (preAnalisis.equals("literal")) {
             literal = cmp.be.preAnalisis;
             emparejar("literal");
             
-            
+            //Accion C3D 41
+            Operando.codigo = literal.lexema;
             
         } else if (preAnalisis.equals("id")) {
             id = cmp.be.preAnalisis;
             emparejar("id");
             
+            //Accion C3D 42
+            Operando.codigo  = id.lexema.substring(1, id.lexema.length() - 1);
             
             
         } else {
@@ -920,7 +948,7 @@ public class GenCodigoInt {
             emparejar ( "opasig" );
             Exparit(Exparit);
             //Accion C3D 16
-            emite( "STORE" + Exparit.codigo + " TO " + idvar.lexema );
+            emite( "STORE " + Exparit.codigo + " TO " + idvar.lexema );
             
         } else {
             error ( "[SentAsig] -> Se esperaba la palbra reservada 'assign'");
@@ -955,8 +983,8 @@ public class GenCodigoInt {
             emite( "USE" + id.lexema );
             emite( "GO TOP" );
             emite( "DO WHILE .NOT. EOF()" );
-            emite( "IF" + ExprCond.codigo );
-            emite( "STORE" + idvar.lexema + "TO" + id.lexema );
+            emite( "IF " + ExprCond.codigo + " " );
+            emite( "STORE " + idvar.lexema + " TO " + id.lexema );
             SentSelectC( SentSelectC );
             emparejar ( "from" );
             
@@ -997,7 +1025,7 @@ public class GenCodigoInt {
             emparejar ( "id" );
             
             //Accion GCI 21
-            emite( "STORE" + idvar.lexema + "TO" + id.lexema);
+            emite( "STORE " + idvar.lexema + " TO " + id.lexema);
             SentSelectC ( SentSelectC1 );
             
             
@@ -1022,13 +1050,17 @@ public class GenCodigoInt {
         if ( preAnalisis.equals( "int" ) ) {
             // TIPO -> int
             emparejar ( "int" );
+            
             //Accion GCI 32
-            emite( "N(5)" );
+            emite( "N(5) ;" );
+            
         } else if ( preAnalisis.equals( "float" ) ) {
             // TIPO -> float
             emparejar ( "float" );
+        
             //Accion GCI 33
-            emite( "N(8,3)" );
+            emite( "N(8,3) ;" );
+            
         } else if ( preAnalisis.equals( "char" ) ) {
             // TIPO -> char (num)
             emparejar ( "char" );
@@ -1036,8 +1068,10 @@ public class GenCodigoInt {
             num = cmp.be.preAnalisis;            
             emparejar ( "num" );
             emparejar ( ")" );
+            
             //Accion GCI 34
-            emite( "C(n)" );
+            emite( "C(n) ;" );
+            
         } else {
             error ( "[Tipo] -> Se esperaba un tipo de dato válido" );
         }
@@ -1056,12 +1090,15 @@ public class GenCodigoInt {
             id = cmp.be.preAnalisis;
             emparejar ( "id" );            
             //Accion GCI 30
-            emite( "CREATE TABLE" + id.lexema + "(");
+            emite( "CREATE TABLE " + id.lexema + "( ;");
+            
             emparejar ( "(" );
             TabColumnas (TabColumnas);
             emparejar ( ")" );
+            
             //Accion GCI 35
             emite( ")" );
+            
         } else {
             error ( "[Tabla] -> Se esperaba la palabra reservada 'create'" );
         }
@@ -1079,7 +1116,8 @@ public class GenCodigoInt {
             id = cmp.be.preAnalisis;            
             emparejar ( "id" );
             //Accin GCI 31
-            emite(id.lexema);
+            emite(id.lexema + " ;");
+            
             Tipo (Tipo);
             
             Nulo (Nulo);
