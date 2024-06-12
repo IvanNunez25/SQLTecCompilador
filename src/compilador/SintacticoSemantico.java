@@ -550,20 +550,25 @@ public class SintacticoSemantico {
                 Exparit.tipo = ExparitPrima.tipo;
             }
         } else if(preAnalisis.equals("(")) {
+            
             //Exparit -> (Exparit) ExparitPrima
+            
             emparejar("(");
             Exparit(Exparit1);
             emparejar(")");
+            
             //Accion Semantica 60
             if(analizarSemantica) {
-                ExparitPrima.h = Exparit.tipo;
+                ExparitPrima.h = Exparit1.tipo;
             }
             ExparitPrima(ExparitPrima);
+            
             //Accion Semantica 61
             if(analizarSemantica) {
                 Exparit.tipo = ExparitPrima.tipo;
             }
-            ExparitPrima(ExparitPrima);
+//            ExparitPrima(ExparitPrima);
+            
         } else {
             error("[Exparit] se esperaba una expresion aritmetica");
         }
@@ -637,6 +642,7 @@ public class SintacticoSemantico {
             }
             
         } else if(preAnalisis.equals("opmult")) {
+            
             //ExparitPrima -> opmult Exparit
             emparejar("opmult");
             Exparit( Exparit );
