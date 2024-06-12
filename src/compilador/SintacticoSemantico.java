@@ -256,12 +256,18 @@ public class SintacticoSemantico {
 	emparejar("end");
         //Accion Semantica 1
         if(analizarSemantica) {
+            if(!(Sentencias.tipo == null)) {
+                
+            
             if(Declaracion.tipo.equals(VACIO) && Sentencias.tipo.equals(VACIO)) {
                 ProgramaSQL.tipo = VACIO;
             } else {
                 ProgramaSQL.tipo = ERROR_TIPO;
                 cmp.me.error(Compilador.ERR_SEMANTICO, "[ProgramaSQL] Errores de tipos en el programa");
 
+            }
+            }else {
+                cmp.me.error(Compilador.ERR_SEMANTICO, "[ProgramaSQL] Errores en Sentencias");                
             }
         }
     } else {
@@ -600,21 +606,21 @@ public class SintacticoSemantico {
                     
                     ExparitPrima.tipo = "float";
                     
-                } else if ( ( ExparitPrima.h.equals( "int" )                        && Pattern.matches( PATRON_ARRAY_1, Exparit.tipo ) )    ||
-                            ( ExparitPrima.h.equals( "float" )                      && Pattern.matches( PATRON_ARRAY_1, Exparit.tipo ) )    ||
-                            ( Pattern.matches( PATRON_ARRAY_1, ExparitPrima.h )     && Exparit.tipo.equals( "int" ) )                       ||
-                            ( Pattern.matches( PATRON_ARRAY_1, ExparitPrima.h )     && Exparit.tipo.equals( "float" ) )                     ||
-                            ( ExparitPrima.h.equals( "columna(int)" )               && Pattern.matches( PATRON_ARRAY_1, Exparit.tipo ) )    ||
-                            ( ExparitPrima.h.equals( "columna(float)" )             && Pattern.matches( PATRON_ARRAY_1, Exparit.tipo ) )    ||
-                            ( Pattern.matches( PATRON_COLUMNA_1, ExparitPrima.h )   && Exparit.tipo.equals( "int" ) )                       ||
-                            ( Pattern.matches( PATRON_COLUMNA_1, ExparitPrima.h )   && Exparit.tipo.equals( "float" ) ) ) {
+              //} //else if ( ( ExparitPrima.h.equals( "int" )                        && Pattern.matches( PATRON_ARRAY_1, Exparit.tipo ) )    ||
+                  //          ( ExparitPrima.h.equals( "float" )                      && Pattern.matches( PATRON_ARRAY_1, Exparit.tipo ) )    ||
+ //                           ( Pattern.matches( PATRON_ARRAY_1, ExparitPrima.h )     && Exparit.tipo.equals( "int" ) )                       ||
+  //                         ( Pattern.matches( PATRON_ARRAY_1, ExparitPrima.h )     && Exparit.tipo.equals( "float" ) )                     ||
+  //                          ( ExparitPrima.h.equals( "columna(int)" )               && Pattern.matches( PATRON_ARRAY_1, Exparit.tipo ) )    ||
+  //                          ( ExparitPrima.h.equals( "columna(float)" )             && Pattern.matches( PATRON_ARRAY_1, Exparit.tipo ) )    ||
+                   //         ( Pattern.matches( PATRON_COLUMNA_1, ExparitPrima.h )   && Exparit.tipo.equals( "int" ) )                       ||
+                    //        ( Pattern.matches( PATRON_COLUMNA_1, ExparitPrima.h )   && Exparit.tipo.equals( "float" ) ) ) {
                     
-                                    if( ExparitPrima.lexema != null ) {
-                                        ExparitPrima.lexemaInt = ExparitPrima.lexema.length() + Exparit.lexema.length();
-                                        ExparitPrima.lexema += Exparit.lexema;                        
-                                    }
+                           //         if( ExparitPrima.lexema != null ) {
+                       //                 ExparitPrima.lexemaInt = ExparitPrima.lexema.length() + Exparit.lexema.length();
+                         //               ExparitPrima.lexema += Exparit.lexema;                        
+                     //               }
 
-                                    ExparitPrima.tipo = "array( 1.." + ExparitPrima.lexemaInt + ", char )";                    
+                   //                 ExparitPrima.tipo = "array( 1.." + ExparitPrima.lexemaInt + ", char )";                    
                     
                 } else if ( ( ExparitPrima.h.equals( "int" )            && Exparit.tipo.equals( "columna(int)" ) )  ||
                             ( ExparitPrima.h.equals( "columna(int)" )   && Exparit.tipo.equals( "int" ) ) ) {
@@ -1101,12 +1107,18 @@ public class SintacticoSemantico {
             Sentencias( Sentencias1 );
             //Accion Semantica 8 pendiente
             if(analizarSemantica) {
-                if( Sentencia.tipo.equals(VACIO) && Sentencias1.tipo.equals(VACIO) ) {
-                    Sentencias.tipo = VACIO;
+                if( !(Sentencia.tipo == null  ) && !(Sentencias1.tipo == null)) {
+                    
+                    if( Sentencia.tipo.equals(VACIO) && Sentencias1.tipo.equals(VACIO) ) {
+                        Sentencias.tipo = VACIO;
+                    } else {
+                        Sentencias.tipo = ERROR_TIPO;
+                    cmp.me.error(Compilador.ERR_SEMANTICO, "[Sentencias] Error de tipo Sentencia");
+                    }
                 } else {
-                    Sentencias.tipo = ERROR_TIPO;
-                cmp.me.error(Compilador.ERR_SEMANTICO, "[Sentencias] Error de tipo Sentencia");
+                    cmp.me.error(Compilador.ERR_SEMANTICO, "[Sentencias] La tabla no existe");
                 }
+
             }
         } else {
             // SENTENCIAS -> empty
@@ -1352,7 +1364,7 @@ public class SintacticoSemantico {
                     SentAsig.tipo = VACIO;
                 } else if(cmp.ts.buscaTipo(idvar.entrada).equals("float") && Exparit.tipo.equals("int")) {
                     SentAsig.tipo = VACIO;
-                } else if(cmp.ts.buscaTipo(idvar.entrada) == null) {
+                } else if(cmp.ts.buscaTipo(idvar.entrada) == null || idvar.entrada == 0 ||  cmp.ts.buscaTipo(idvar.entrada).equals("") ) {
                     SentAsig.tipo = ERROR_TIPO;
                     cmp.me.error(Compilador.ERR_SEMANTICO, "[SentAsig] Variable no declarada: idvar.lexema");                                         
                 } else {
@@ -1597,7 +1609,7 @@ public class SintacticoSemantico {
             //Accion Semantica 34
             if(analizarSemantica) {
                 if(cmp.ts.buscaTipo(id.entrada) == null || cmp.ts.buscaTipo( id.entrada ).equals( "" ) ) {
-                    cmp.ts.anadeTipo(id.entrada, "columna(Tipo.tipo)");
+                    cmp.ts.anadeTipo(id.entrada, "columna("+Tipo.tipo+")");
                     TabColumnas.h = VACIO;
                 } else {
                     TabColumnas.h = ERROR_TIPO;
