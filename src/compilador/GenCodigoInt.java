@@ -59,6 +59,11 @@ public class GenCodigoInt {
     private ArrayList <String> listaColumnasUpdate    = new ArrayList<>();
     private ArrayList <String> listaExpresionesUpdate = new ArrayList<>();
     
+    private ArrayList <String> listaSelect = new ArrayList<>();
+    private ArrayList <String> listaSelect2 = new ArrayList<>();
+    
+    private boolean flag = false;
+    
     private boolean updateRegistros = false;
 
     
@@ -227,6 +232,10 @@ public class GenCodigoInt {
                 || preAnalisis.equals("print") || preAnalisis.equals("assign") || preAnalisis.equals("select") || preAnalisis.equals("delete")
                 || preAnalisis.equals("insert") || preAnalisis.equals("update") || preAnalisis.equals("create") || preAnalisis.equals("drop")
                 || preAnalisis.equals("case")) {
+            
+            emite( "CLEAR" );
+            emite( "CLEAR ALL" );
+            emite( "SET TALK OFF" );
         Declaracion(Declaracion);
 	Sentencias(Sentencias);
 	emparejar("end");
@@ -263,11 +272,17 @@ public class GenCodigoInt {
             emite ( "USE " + id.lexema);
             emite ( "GO TOP" );
             emite ( "DO WHILE .NOT. EOF()" );
-            emite ( "IF _" + ExprCond.codigo);
+            emite ( "IF " + ExprCond.codigo);
             
             for ( int i = 0; i < listaColumnasUpdate.size(); i++ ) {
                 emite("REPLACE " + listaColumnasUpdate.get(i) + " WITH " + listaExpresionesUpdate.get(i) );
             }
+            
+            emite( "ENDIF" );
+            emite( "SKIP" );
+            emite( "ENDDO" );
+            emite( "BROW" );
+            emite( "USE" );
             
             listaColumnasUpdate.clear();
             listaExpresionesUpdate.clear();
@@ -353,7 +368,7 @@ public class GenCodigoInt {
             emparejar("print");
             Exparit (Exparit);
             //Accion C3D 1
-            emite( ( cmp.ts.buscar( Exparit.codigo ) == 0 ? "? \"" + Exparit.codigo + "\"" : "? _" + Exparit.codigo));
+            emite( ( cmp.ts.buscar( Exparit.codigo.replace( '_', '@') ) == 0 ? "? \"" + Exparit.codigo + "\"" : "? " + Exparit.codigo) );
         } else {
             error("[Despliegue] se esperaba print");
         }
@@ -377,8 +392,11 @@ public class GenCodigoInt {
             emite( "USE " + id.lexema);
             emite ( "GO TOP");
             emite ( "DO WHILE .NOT. EOF()" );
-            emite ( "IF " + ExprCond.codigo + "");
+            
+            emite ( "IF _" + ExprCond.codigo );
             emite( "DELETE" );
+            
+            
             emite( "ENDIF" );
             emite( "SKIP" );
             emite( "ENDDO" );
@@ -538,7 +556,9 @@ public class GenCodigoInt {
             Exparit( Exparit1 );
              
             // Accion C3D 11
-            Exprrel.codigo = Exparit.codigo + " " + oprel.lexema + " " + Exparit1.codigo;
+            boolean codigo1 = cmp.ts.buscar( Exparit.codigo ) == 0 && !Exparit.codigo.substring(0, 1).equals("_");
+            boolean codigo2 = cmp.ts.buscar( Exparit1.codigo ) == 0 && !Exparit1.codigo.substring(0, 1).equals("_");
+            Exprrel.codigo = ( !codigo1 ? Exparit.codigo : "\"" + Exparit.codigo + "\"" ) + " " + oprel.lexema + " " + ( !codigo2 ? Exparit1.codigo : "\"" + Exparit1.codigo + "\"" );
              
          } else {
             error("[Exprrel] se esperaba una expresion aritmetica");
@@ -601,7 +621,7 @@ public class GenCodigoInt {
             emparejar("begin");
             
             // Accion SC3D 7
-            emite( "IF _" + ExprCond.codigo + " ");
+            emite( "IF " + ExprCond.codigo + " ");
             
             Sentencias(Sentencias);
             emparejar("end");
@@ -674,11 +694,11 @@ public class GenCodigoInt {
         } else {
             // IGUALACIONprima -> empty
             // Accion C3D 5
-            emite ( "ENDIF" );
-            emite ( "SKIP" );
-            emite ( "ENDDO" );
-            emite ( "BROW" );
-            emite ( "USE" );
+//            emite ( "ENDIF" );
+//            emite ( "SKIP" );
+//            emite ( "ENDDO" );
+//            emite ( "BROW" );
+//            emite ( "USE" );
         }
     }
 
@@ -782,7 +802,8 @@ public class GenCodigoInt {
             emparejar("idvar");
             
             //Accion C3D 40
-            Operando.codigo = idvar.lexema.substring(1, idvar.lexema.length());
+            //Operando.codigo = idvar.lexema.substring(1, idvar.lexema.length());
+            Operando.codigo = "_" + idvar.lexema.substring(1, idvar.lexema.length());
             
         } else if (preAnalisis.equals("literal")) {
             literal = cmp.be.preAnalisis;
@@ -913,12 +934,15 @@ public class GenCodigoInt {
         if ( preAnalisis.equals( "when" ) ) {
             // SELWHEN -> when EXPRCOND then SENTENCIA SELWHEN_PRIMA()
             emparejar ( "when" );
-            ExprCond (ExprCond);
+            ExprCond (ExprCond);            
+            
+            //Accion GCI 27
+            emite( "CASE " + ExprCond.codigo);
             
             emparejar ( "then" );
             Sentencia (Sentencia);
-            //Accion GCI 27
-            emite( "CASE _" + ExprCond.codigo);
+            
+            
             SelWhenPrima (SelWhenPrima);
             
         } else {
@@ -967,8 +991,12 @@ public class GenCodigoInt {
             ExprCond(ExprCond);
             emparejar( "begin" );
             // Accion C3D 17
-            emite( "DO WHILE _" + ExprCond.codigo);
+            emite( "DO WHILE " + ExprCond.codigo);
+            
             Sentencias(Sentencias);
+            
+            
+            
             emparejar( "end" );
             
         } else {
@@ -989,8 +1017,16 @@ public class GenCodigoInt {
             emparejar ( "idvar" );
             emparejar ( "opasig" );
             Exparit(Exparit);
+            
             //Accion C3D 16
-            emite( "STORE " + ( Exparit.codigo.matches(integerRegex) || Exparit.codigo.matches(decimalRegex) ? Exparit.codigo : "\"" + Exparit.codigo + "\"" ) + " TO _" + idvar.lexema.substring( 1, idvar.lexema.length() ) );
+            boolean patron = ( Pattern.matches(integerRegex, Exparit.codigo) && Pattern.matches(decimalRegex, Exparit.codigo) ) || cmp.ts.buscar( Exparit.codigo ) == 0;
+            //emite( "STORE " + ( patron ? "\"" + Exparit.codigo + "\"" : Exparit.codigo ) + " TO _" + idvar.lexema.substring( 1, idvar.lexema.length() ) );
+            emite( "STORE " + Exparit.codigo + " TO _" + idvar.lexema.substring( 1, idvar.lexema.length() ) );
+            
+            if ( flag ) {
+                // Accion NUEVA
+                emite ( "ENDDO " );
+            }
             
             
         } else {
@@ -1041,7 +1077,12 @@ public class GenCodigoInt {
             //emite( "IF " + ExprCond.codigo + " " );
             //emite( "STORE " + idvar.lexema + " TO " + id.lexema );            
             emite( "IF " + ExprCond.codigo + " " );
-            emite( "STORE _" + idvar.lexema.substring( 1, idvar.lexema.length() ) + " TO " + aux );
+            emite( "STORE " + aux + " TO _" +   idvar.lexema.substring( 1, idvar.lexema.length() ));
+            
+            for ( int i = 0; i < listaSelect.size(); i++) {
+                emite( "STORE " + listaSelect2.get( i ) + " TO _" + listaSelect.get(i) );
+            }
+            
             //Accion GCI 22
             emite( "ENDIF" );
             emite( "SKIP" );
@@ -1079,7 +1120,9 @@ public class GenCodigoInt {
             emparejar ( "id" );
             
             //Accion GCI 21
-            emite( "STORE _" + idvar.lexema.substring( 1, idvar.lexema.length() ) + " TO " + id.lexema);
+            listaSelect.add( idvar.lexema.substring( 1, idvar.lexema.length() ) );
+            listaSelect2.add( id.lexema );
+            
             SentSelectC ( SentSelectC1 );
             
             
